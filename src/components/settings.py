@@ -4,7 +4,8 @@ from src.config.settings import (
     CHUNK_SIZE,
     BATCH_SIZE,
     EMBEDDING_MODEL,
-    DEFAULT_TOP_K
+    DEFAULT_TOP_K,
+    SIMILARITY_THRESHOLD
 )
 
 def render_settings(pinecone_service: PineconeService):
@@ -17,7 +18,7 @@ def render_settings(pinecone_service: PineconeService):
         "チャンクサイズ（文字数）",
         min_value=100,
         max_value=2000,
-        value=CHUNK_SIZE,
+        value=st.session_state.get("chunk_size", CHUNK_SIZE),
         help="テキストを分割する際の1チャンクあたりの文字数"
     )
     
@@ -25,7 +26,7 @@ def render_settings(pinecone_service: PineconeService):
         "バッチサイズ",
         min_value=10,
         max_value=500,
-        value=BATCH_SIZE,
+        value=st.session_state.get("batch_size", BATCH_SIZE),
         help="Pineconeへのアップロード時のバッチサイズ"
     )
 
@@ -34,9 +35,18 @@ def render_settings(pinecone_service: PineconeService):
     top_k = st.number_input(
         "検索結果数",
         min_value=1,
-        max_value=10,
-        value=DEFAULT_TOP_K,
+        max_value=20,
+        value=st.session_state.get("top_k", DEFAULT_TOP_K),
         help="検索時に返す結果の数"
+    )
+    
+    similarity_threshold = st.slider(
+        "類似度しきい値",
+        min_value=0.0,
+        max_value=1.0,
+        value=st.session_state.get("similarity_threshold", SIMILARITY_THRESHOLD),
+        step=0.05,
+        help="この値以上の類似度を持つ結果のみを表示します"
     )
 
     # プロンプト設定
@@ -76,6 +86,7 @@ def render_settings(pinecone_service: PineconeService):
             "chunk_size": chunk_size,
             "batch_size": batch_size,
             "top_k": top_k,
+            "similarity_threshold": similarity_threshold,
             "system_prompt": system_prompt,
             "response_template": response_template
         })

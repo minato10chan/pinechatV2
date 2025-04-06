@@ -9,7 +9,8 @@ from ..config.settings import (
     PINECONE_API_KEY,
     PINECONE_INDEX_NAME,
     OPENAI_API_KEY,
-    DEFAULT_TOP_K
+    DEFAULT_TOP_K,
+    SIMILARITY_THRESHOLD
 )
 
 class LangChainService:
@@ -55,15 +56,33 @@ class LangChainService:
 
     def get_relevant_context(self, query: str, top_k: int = DEFAULT_TOP_K) -> Tuple[str, List[Dict[str, Any]]]:
         """クエリに関連する文脈を取得"""
-        docs = self.vectorstore.similarity_search_with_score(query, k=top_k)
-        context_text = "\n".join([doc[0].page_content for doc in docs])
+        # より多くの結果を取得して、後でフィルタリング
+        docs = self.vectorstore.similarity_search_with_score(query, k=top_k * 2)
+        
+        # スコアでフィルタリング
+        filtered_docs = [
+            doc for doc in docs 
+            if doc[1] >= SIMILARITY_THRESHOLD
+        ][:top_k]  # 上位K件に制限
+        
+        # フィルタリング後の結果が0件の場合は、スコアに関係なく上位K件を使用
+        if not filtered_docs and docs:
+            filtered_docs = docs[:top_k]
+        
+        context_text = "\n".join([doc[0].page_content for doc in filtered_docs])
         search_details = [
             {
                 "スコア": round(doc[1], 4),  # 類似度スコアを小数点4桁まで表示
                 "テキスト": doc[0].page_content[:100] + "..."  # テキストの一部を表示
             }
-            for doc in docs
+            for doc in filtered_docs
         ]
+        
+        print(f"検索クエリ: {query}")  # デバッグ用
+        print(f"検索結果数: {len(filtered_docs)}")  # デバッグ用
+        for detail in search_details:
+            print(f"スコア: {detail['スコア']}, テキスト: {detail['テキスト']}")  # デバッグ用
+        
         return context_text, search_details
 
     def get_response(self, query: str) -> Tuple[str, Dict[str, Any]]:
