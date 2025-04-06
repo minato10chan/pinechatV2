@@ -6,7 +6,8 @@ from ..config.settings import (
     PINECONE_INDEX_NAME,
     OPENAI_API_KEY,
     EMBEDDING_MODEL,
-    BATCH_SIZE
+    BATCH_SIZE,
+    DEFAULT_TOP_K
 )
 
 class PineconeService:
@@ -65,14 +66,18 @@ class PineconeService:
             # バッチをアップロード
             self.index.upsert(vectors=vectors)
 
-    def query(self, query_text: str, top_k: int = 3) -> Any:
+    def query(self, query_text: str, top_k: int = DEFAULT_TOP_K) -> Any:
         """クエリに基づいて類似チャンクを検索"""
         query_vector = self.get_embedding(query_text)
+        print(f"検索クエリ: {query_text}")  # デバッグ用
         results = self.index.query(
             vector=query_vector,
             top_k=top_k,
             include_metadata=True
         )
+        print(f"検索結果数: {len(results.matches)}")  # デバッグ用
+        for match in results.matches:
+            print(f"スコア: {match.score}, テキスト: {match.metadata['text'][:100]}...")  # デバッグ用
         return results
 
     def get_index_stats(self) -> Dict[str, Any]:

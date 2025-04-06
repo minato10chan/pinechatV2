@@ -8,7 +8,8 @@ import os
 from ..config.settings import (
     PINECONE_API_KEY,
     PINECONE_INDEX_NAME,
-    OPENAI_API_KEY
+    OPENAI_API_KEY,
+    DEFAULT_TOP_K
 )
 
 class LangChainService:
@@ -52,7 +53,7 @@ class LangChainService:
         # チェーンの初期化
         self.chain = prompt | self.llm
 
-    def get_relevant_context(self, query: str, top_k: int = 3) -> Tuple[str, List[Dict[str, Any]]]:
+    def get_relevant_context(self, query: str, top_k: int = DEFAULT_TOP_K) -> Tuple[str, List[Dict[str, Any]]]:
         """クエリに関連する文脈を取得"""
         docs = self.vectorstore.similarity_search_with_score(query, k=top_k)
         context_text = "\n".join([doc[0].page_content for doc in docs])
