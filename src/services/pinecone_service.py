@@ -44,6 +44,7 @@ class PineconeService:
             try:
                 # インデックスの存在確認
                 existing_indexes = self.pc.list_indexes().names()
+                print(f"既存のインデックス: {existing_indexes}")
                 
                 if PINECONE_INDEX_NAME not in existing_indexes:
                     print(f"インデックス '{PINECONE_INDEX_NAME}' が存在しないため、新規作成します")
@@ -58,6 +59,7 @@ class PineconeService:
                         metric="cosine",
                         spec=spec
                     )
+                    print(f"インデックス '{PINECONE_INDEX_NAME}' の作成を開始しました")
                     # インデックスの作成完了を待機
                     time.sleep(10)
                 
@@ -68,6 +70,12 @@ class PineconeService:
                 # インデックスの状態を確認
                 stats = self.index.describe_index_stats()
                 print(f"インデックスの状態: {stats.total_vector_count}件のベクトル")
+                
+                # インデックスが空の場合、テストデータを削除
+                if stats.total_vector_count == 0:
+                    print("インデックスが空です。テストデータを削除します。")
+                    self.clear_index()
+                
                 return
                 
             except Exception as e:

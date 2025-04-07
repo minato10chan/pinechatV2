@@ -17,7 +17,14 @@ if "response_template" not in st.session_state:
     st.session_state.response_template = DEFAULT_RESPONSE_TEMPLATE
 
 # Pineconeサービスの初期化
-pinecone_service = PineconeService()
+try:
+    pinecone_service = PineconeService()
+    # インデックスの状態を確認
+    stats = pinecone_service.get_index_stats()
+    st.write(f"データベースの状態: {stats['total_vector_count']}件のドキュメント")
+except Exception as e:
+    st.error(f"Pineconeサービスの初期化に失敗しました: {str(e)}")
+    st.stop()
 
 def read_file_content(file) -> str:
     """ファイルの内容を適切なエンコーディングで読み込む"""
