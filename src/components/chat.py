@@ -3,7 +3,10 @@ import json
 from datetime import datetime
 from src.services.pinecone_service import PineconeService
 from src.services.langchain_service import LangChainService
-from src.config.settings import DEFAULT_PROMPT_TEMPLATES
+from src.config.settings import (
+    DEFAULT_PROMPT_TEMPLATES,
+    load_prompt_templates
+)
 
 def save_chat_history(messages, filename=None):
     """チャット履歴をJSONファイルとして保存"""
@@ -38,7 +41,7 @@ def render_chat(pinecone_service: PineconeService):
     
     # プロンプトテンプレートの初期化
     if "prompt_templates" not in st.session_state:
-        st.session_state.prompt_templates = DEFAULT_PROMPT_TEMPLATES.copy()
+        st.session_state.prompt_templates = load_prompt_templates()
     
     # サイドバーに履歴管理機能を配置
     with st.sidebar:
