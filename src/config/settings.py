@@ -11,12 +11,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # API Keys
-PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
+PINECONE_API_KEY = st.secrets["pinecone_key"]
 OPENAI_API_KEY = st.secrets["openai_api_key"]
 
 # Pinecone Settings
 PINECONE_INDEX_NAME = st.secrets["index_name"]
-PINECONE_ASSISTANT_NAME = os.getenv("PINECONE_ASSISTANT_NAME")
+PINECONE_ASSISTANT_NAME = st.secrets["assistant_name"]
 
 # Text Processing Settings
 CHUNK_SIZE = 500  # テキストを分割する際の1チャンクあたりの文字数
