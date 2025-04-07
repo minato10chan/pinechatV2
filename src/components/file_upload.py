@@ -27,7 +27,7 @@ def render_file_upload(pinecone_service: PineconeService):
             try:
                 with st.spinner("ファイルを処理中..."):
                     file_content = read_file_content(uploaded_file)
-                    chunks = process_text_file(file_content)
+                    chunks = process_text_file(file_content, uploaded_file.name)
                     st.write(f"ファイルを{len(chunks)}個のチャンクに分割しました")
                     
                     with st.spinner("Pineconeにアップロード中..."):
