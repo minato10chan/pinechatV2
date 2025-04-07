@@ -71,11 +71,6 @@ class PineconeService:
                 stats = self.index.describe_index_stats()
                 print(f"インデックスの状態: {stats.total_vector_count}件のベクトル")
                 
-                # インデックスが空の場合、テストデータを削除
-                if stats.total_vector_count == 0:
-                    print("インデックスが空です。テストデータを削除します。")
-                    self.clear_index()
-                
                 return
                 
             except Exception as e:

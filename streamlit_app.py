@@ -21,7 +21,10 @@ try:
     pinecone_service = PineconeService()
     # インデックスの状態を確認
     stats = pinecone_service.get_index_stats()
-    st.write(f"データベースの状態: {stats['total_vector_count']}件のドキュメント")
+    if stats['total_vector_count'] == 0:
+        st.info("データベースは空です。ファイルをアップロードしてデータを追加してください。")
+    else:
+        st.write(f"データベースの状態: {stats['total_vector_count']}件のドキュメント")
 except Exception as e:
     st.error(f"Pineconeサービスの初期化に失敗しました: {str(e)}")
     st.stop()
