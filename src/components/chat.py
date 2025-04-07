@@ -3,6 +3,7 @@ import json
 from datetime import datetime
 from src.services.pinecone_service import PineconeService
 from src.services.langchain_service import LangChainService
+from src.config.settings import DEFAULT_PROMPT_TEMPLATES
 
 def save_chat_history(messages, filename=None):
     """チャット履歴をJSONファイルとして保存"""
@@ -35,9 +36,31 @@ def render_chat(pinecone_service: PineconeService):
     if "langchain_service" not in st.session_state:
         st.session_state.langchain_service = LangChainService()
     
+    # プロンプトテンプレートの初期化
+    if "prompt_templates" not in st.session_state:
+        st.session_state.prompt_templates = DEFAULT_PROMPT_TEMPLATES.copy()
+    
     # サイドバーに履歴管理機能を配置
     with st.sidebar:
         st.header("チャット履歴管理")
+        
+        # プロンプトテンプレートの選択
+        st.header("プロンプトテンプレート")
+        template_names = [template["name"] for template in st.session_state.prompt_templates]
+        selected_template = st.selectbox(
+            "使用するテンプレートを選択",
+            template_names,
+            index=0
+        )
+        
+        # 選択されたテンプレートの内容を表示
+        selected_template_data = next(
+            template for template in st.session_state.prompt_templates 
+            if template["name"] == selected_template
+        )
+        with st.expander("選択中のテンプレート"):
+            st.text_area("システムプロンプト", value=selected_template_data["system_prompt"], disabled=True)
+            st.text_area("応答テンプレート", value=selected_template_data["response_template"], disabled=True)
         
         # 履歴の保存
         if st.button("現在の履歴を保存"):
@@ -89,9 +112,19 @@ def render_chat(pinecone_service: PineconeService):
         with st.chat_message("user"):
             st.markdown(prompt)
 
+        # 選択されたテンプレートを取得
+        selected_template_data = next(
+            template for template in st.session_state.prompt_templates 
+            if template["name"] == selected_template
+        )
+        
         # LangChainを使用して応答を生成
         with st.spinner("応答を生成中..."):
-            response, details = st.session_state.langchain_service.get_response(prompt)
+            response, details = st.session_state.langchain_service.get_response(
+                prompt,
+                system_prompt=selected_template_data["system_prompt"],
+                response_template=selected_template_data["response_template"]
+            )
             
             # アシスタントの応答を表示
             st.session_state.messages.append({

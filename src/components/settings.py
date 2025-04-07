@@ -5,7 +5,8 @@ from src.config.settings import (
     BATCH_SIZE,
     EMBEDDING_MODEL,
     DEFAULT_TOP_K,
-    SIMILARITY_THRESHOLD
+    SIMILARITY_THRESHOLD,
+    DEFAULT_PROMPT_TEMPLATES
 )
 
 def render_settings(pinecone_service: PineconeService):
@@ -51,17 +52,41 @@ def render_settings(pinecone_service: PineconeService):
 
     # プロンプト設定
     st.header("プロンプト設定")
-    system_prompt = st.text_area(
-        "システムプロンプト",
-        value=st.session_state.get("system_prompt", "あなたは親切なアシスタントです。質問に対して、提供された文脈に基づいて回答してください。"),
-        help="アシスタントの基本的な振る舞いを定義するプロンプト"
-    )
     
-    response_template = st.text_area(
-        "応答テンプレート",
-        value=st.session_state.get("response_template", "検索結果に基づいて回答します：\n\n{context}"),
-        help="検索結果を表示する際のテンプレート。{context}は検索結果に置換されます。"
-    )
+    # プロンプトテンプレートの選択
+    if "prompt_templates" not in st.session_state:
+        st.session_state.prompt_templates = DEFAULT_PROMPT_TEMPLATES.copy()
+    
+    # プロンプトテンプレートの一覧を表示
+    st.subheader("プロンプトテンプレート一覧")
+    for i, template in enumerate(st.session_state.prompt_templates):
+        with st.expander(f"テンプレート: {template['name']}"):
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                st.text_area("システムプロンプト", value=template["system_prompt"], key=f"system_prompt_{i}", height=150)
+                st.text_area("応答テンプレート", value=template["response_template"], key=f"response_template_{i}", height=150)
+            with col2:
+                if st.button("削除", key=f"delete_template_{i}"):
+                    st.session_state.prompt_templates.pop(i)
+                    st.rerun()
+    
+    # 新規プロンプトテンプレートの追加
+    st.subheader("新規プロンプトテンプレートの追加")
+    new_template_name = st.text_input("テンプレート名")
+    new_system_prompt = st.text_area("システムプロンプト", height=150)
+    new_response_template = st.text_area("応答テンプレート", height=150)
+    
+    if st.button("テンプレートを追加"):
+        if new_template_name and new_system_prompt and new_response_template:
+            st.session_state.prompt_templates.append({
+                "name": new_template_name,
+                "system_prompt": new_system_prompt,
+                "response_template": new_response_template
+            })
+            st.success("テンプレートを追加しました")
+            st.rerun()
+        else:
+            st.error("全てのフィールドを入力してください")
 
     # データベース設定
     st.header("データベース設定")
@@ -86,8 +111,6 @@ def render_settings(pinecone_service: PineconeService):
             "chunk_size": chunk_size,
             "batch_size": batch_size,
             "top_k": top_k,
-            "similarity_threshold": similarity_threshold,
-            "system_prompt": system_prompt,
-            "response_template": response_template
+            "similarity_threshold": similarity_threshold
         })
         st.success("設定を保存しました。") 

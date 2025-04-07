@@ -10,7 +10,9 @@ from ..config.settings import (
     PINECONE_INDEX_NAME,
     OPENAI_API_KEY,
     DEFAULT_TOP_K,
-    SIMILARITY_THRESHOLD
+    SIMILARITY_THRESHOLD,
+    DEFAULT_SYSTEM_PROMPT,
+    DEFAULT_RESPONSE_TEMPLATE
 )
 
 class LangChainService:
@@ -41,18 +43,9 @@ class LangChainService:
         # チャット履歴の初期化
         self.message_history = ChatMessageHistory()
         
-        # プロンプトテンプレートの設定
-        prompt = ChatPromptTemplate.from_messages([
-            ("system", """あなたは文脈に基づいて質問に答えるアシスタントです。
-            以下の文脈から関連する情報を探し、それに基づいて回答してください。
-            文脈に含まれていない情報については、推測せずに「その情報は提供された文脈に含まれていません」と回答してください。"""),
-            MessagesPlaceholder(variable_name="chat_history"),
-            ("system", "参照文脈:\n{context}"),
-            ("human", "{input}")
-        ])
-        
-        # チェーンの初期化
-        self.chain = prompt | self.llm
+        # デフォルトのプロンプトテンプレート
+        self.system_prompt = DEFAULT_SYSTEM_PROMPT
+        self.response_template = DEFAULT_RESPONSE_TEMPLATE
 
     def get_relevant_context(self, query: str, top_k: int = DEFAULT_TOP_K) -> Tuple[str, List[Dict[str, Any]]]:
         """クエリに関連する文脈を取得"""
@@ -85,8 +78,23 @@ class LangChainService:
         
         return context_text, search_details
 
-    def get_response(self, query: str) -> Tuple[str, Dict[str, Any]]:
+    def get_response(self, query: str, system_prompt: str = None, response_template: str = None) -> Tuple[str, Dict[str, Any]]:
         """クエリに対する応答を生成"""
+        # プロンプトの設定
+        system_prompt = system_prompt or self.system_prompt
+        response_template = response_template or self.response_template
+        
+        # プロンプトテンプレートの設定
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", system_prompt),
+            MessagesPlaceholder(variable_name="chat_history"),
+            ("system", "参照文脈:\n{context}"),
+            ("human", "{input}")
+        ])
+        
+        # チェーンの初期化
+        chain = prompt | self.llm
+        
         # 関連する文脈を取得
         context, search_details = self.get_relevant_context(query)
         
@@ -94,7 +102,7 @@ class LangChainService:
         chat_history = self.message_history.messages
         
         # 応答を生成
-        response = self.chain.invoke({
+        response = chain.invoke({
             "chat_history": chat_history,
             "context": context,
             "input": query
@@ -111,6 +119,10 @@ class LangChainService:
             "文脈検索": {
                 "検索結果数": len(search_details),
                 "マッチしたチャンク": search_details
+            },
+            "プロンプト": {
+                "システムプロンプト": system_prompt,
+                "応答テンプレート": response_template
             }
         }
         

@@ -31,4 +31,32 @@ DEFAULT_RESPONSE_TEMPLATE = """検索結果に基づいて回答します：
 
 {context}
 
-この回答は、アップロードされたドキュメントの内容に基づいています。""" 
+この回答は、アップロードされたドキュメントの内容に基づいています。"""
+
+# デフォルトのプロンプトテンプレート
+DEFAULT_PROMPT_TEMPLATES = [
+    {
+        "name": "標準プロンプト",
+        "system_prompt": DEFAULT_SYSTEM_PROMPT,
+        "response_template": DEFAULT_RESPONSE_TEMPLATE
+    },
+    {
+        "name": "簡潔な回答",
+        "system_prompt": """あなたは簡潔で要点を押さえた回答をするアシスタントです。
+質問に対して、提供された文脈から最も重要な情報を選び、簡潔に回答してください。""",
+        "response_template": """要点をまとめます：
+
+{context}"""
+    },
+    {
+        "name": "詳細な回答",
+        "system_prompt": """あなたは詳細な説明をするアシスタントです。
+質問に対して、提供された文脈から関連する情報を全て含め、詳細に回答してください。""",
+        "response_template": """詳細な回答を提供します：
+
+{context}
+
+この回答は、アップロードされたドキュメントの内容に基づいています。
+必要に応じて、関連する情報を追加で提供します。"""
+    }
+] 
