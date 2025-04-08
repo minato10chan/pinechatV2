@@ -86,7 +86,6 @@ def render_file_upload(pinecone_service: PineconeService):
                     # メタデータを追加
                     for chunk in chunks:
                         chunk["metadata"] = {
-                            **chunk.get("metadata", {}),
                             "main_category": main_category,
                             "sub_category": sub_category,
                             "city": city,
@@ -94,6 +93,8 @@ def render_file_upload(pinecone_service: PineconeService):
                             "upload_date": upload_date.isoformat(),
                             "source": source if source else None
                         }
+                        chunk["filename"] = uploaded_file.name
+                        chunk["chunk_id"] = chunk["id"]
                     
                     with st.spinner("Pineconeにアップロード中..."):
                         pinecone_service.upload_chunks(chunks)

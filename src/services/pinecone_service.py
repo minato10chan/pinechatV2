@@ -127,12 +127,24 @@ class PineconeService:
                     try:
                         print(f"  チャンク {j}/{len(batch)} の埋め込みベクトルを生成中...")
                         vector = self.get_embedding(chunk["text"])
+                        
+                        # メタデータの設定
+                        metadata = {
+                            "text": chunk["text"],
+                            "filename": chunk.get("filename", ""),
+                            "chunk_id": chunk.get("chunk_id", ""),
+                            "main_category": chunk.get("metadata", {}).get("main_category", ""),
+                            "sub_category": chunk.get("metadata", {}).get("sub_category", ""),
+                            "city": chunk.get("metadata", {}).get("city", ""),
+                            "created_date": chunk.get("metadata", {}).get("created_date", ""),
+                            "upload_date": chunk.get("metadata", {}).get("upload_date", ""),
+                            "source": chunk.get("metadata", {}).get("source", "")
+                        }
+                        
                         vectors.append({
                             "id": chunk["id"],
                             "values": vector,
-                            "metadata": {
-                                "text": chunk["text"]
-                            }
+                            "metadata": metadata
                         })
                     except Exception as e:
                         print(f"  チャンク {chunk['id']} の処理中にエラーが発生しました: {str(e)}")
@@ -267,29 +279,30 @@ class PineconeService:
                 else:
                     raise Exception(f"インデックスのクリアに失敗しました（最大試行回数到達）: {str(e)}")
 
-    def get_index_data(self, limit: int = 100) -> List[Dict[str, Any]]:
+    def get_index_data(self, top_k: int = 100) -> List[Dict]:
         """インデックスのデータを取得"""
         try:
-            # インデックスの統計情報を取得
-            stats = self.index.describe_index_stats()
-            total_vectors = stats.total_vector_count
-            
-            # データを取得
-            results = self.index.query(
-                vector=[0.0] * 1536,  # ダミーのベクトル
-                top_k=min(limit, total_vectors),
+            # 空のベクトルでクエリを実行して全データを取得
+            query_results = self.index.query(
+                vector=[0.0] * self.dimension,
+                top_k=top_k,
                 include_metadata=True
             )
             
             # 結果を整形
-            data = []
-            for match in results.matches:
-                data.append({
+            results = []
+            for match in query_results.matches:
+                result = {
                     "ID": match.id,
-                    "テキスト": match.metadata.get("text", "")[:100] + "..." if len(match.metadata.get("text", "")) > 100 else match.metadata.get("text", "")
-                })
+                    "score": match.score,
+                    "text": match.metadata.get("text", "") if match.metadata else "",
+                    "filename": match.metadata.get("filename", "") if match.metadata else "",
+                    "chunk_id": match.metadata.get("chunk_id", "") if match.metadata else "",
+                    "metadata": match.metadata if match.metadata else {}
+                }
+                results.append(result)
             
-            return data
-            
+            return results
         except Exception as e:
-            raise Exception(f"データの取得に失敗しました: {str(e)}") 
+            st.error(f"データベースの状態取得に失敗しました: {str(e)}")
+            return [] 

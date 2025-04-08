@@ -163,42 +163,46 @@ def render_settings(pinecone_service: PineconeService):
             st.subheader("データベースの内容")
             data = pinecone_service.get_index_data()
             if data:
-                # データフレームの作成
-                df = pd.DataFrame(data)
-                
-                # メタデータの列を追加（メタデータが存在しない場合は空文字列を設定）
-                df['大カテゴリ'] = df['metadata'].apply(lambda x: x.get('main_category', '') if isinstance(x, dict) else '')
-                df['中カテゴリ'] = df['metadata'].apply(lambda x: x.get('sub_category', '') if isinstance(x, dict) else '')
-                df['市区町村'] = df['metadata'].apply(lambda x: x.get('city', '') if isinstance(x, dict) else '')
-                df['データ作成日'] = df['metadata'].apply(lambda x: x.get('created_date', '') if isinstance(x, dict) else '')
-                df['アップロード日'] = df['metadata'].apply(lambda x: x.get('upload_date', '') if isinstance(x, dict) else '')
-                df['ソース元'] = df['metadata'].apply(lambda x: x.get('source', '') if isinstance(x, dict) else '')
-                
-                # 表示する列を選択
-                display_columns = [
-                    'ID', 'filename', 'chunk_id', '大カテゴリ', '中カテゴリ', 
-                    '市区町村', 'データ作成日', 'アップロード日', 'ソース元', 
-                    'text', 'score'
-                ]
-                
-                # データフレームの表示
-                st.dataframe(
-                    df[display_columns],
-                    hide_index=True,
-                    column_config={
-                        "ID": st.column_config.TextColumn("ID", width="small"),
-                        "filename": st.column_config.TextColumn("ファイル名", width="medium"),
-                        "chunk_id": st.column_config.TextColumn("チャンクID", width="small"),
-                        "大カテゴリ": st.column_config.TextColumn("大カテゴリ", width="medium"),
-                        "中カテゴリ": st.column_config.TextColumn("中カテゴリ", width="medium"),
-                        "市区町村": st.column_config.TextColumn("市区町村", width="medium"),
-                        "データ作成日": st.column_config.TextColumn("データ作成日", width="medium"),
-                        "アップロード日": st.column_config.TextColumn("アップロード日", width="medium"),
-                        "ソース元": st.column_config.TextColumn("ソース元", width="medium"),
-                        "text": st.column_config.TextColumn("テキスト", width="large"),
-                        "score": st.column_config.NumberColumn("スコア", width="small", format="%.3f")
-                    }
-                )
+                try:
+                    # データフレームの作成
+                    df = pd.DataFrame(data)
+                    
+                    # メタデータの列を追加（メタデータが存在しない場合は空文字列を設定）
+                    df['大カテゴリ'] = df['metadata'].apply(lambda x: x.get('main_category', '') if isinstance(x, dict) else '')
+                    df['中カテゴリ'] = df['metadata'].apply(lambda x: x.get('sub_category', '') if isinstance(x, dict) else '')
+                    df['市区町村'] = df['metadata'].apply(lambda x: x.get('city', '') if isinstance(x, dict) else '')
+                    df['データ作成日'] = df['metadata'].apply(lambda x: x.get('created_date', '') if isinstance(x, dict) else '')
+                    df['アップロード日'] = df['metadata'].apply(lambda x: x.get('upload_date', '') if isinstance(x, dict) else '')
+                    df['ソース元'] = df['metadata'].apply(lambda x: x.get('source', '') if isinstance(x, dict) else '')
+                    
+                    # 表示する列を選択
+                    display_columns = [
+                        'ID', 'filename', 'chunk_id', '大カテゴリ', '中カテゴリ', 
+                        '市区町村', 'データ作成日', 'アップロード日', 'ソース元', 
+                        'text', 'score'
+                    ]
+                    
+                    # データフレームの表示
+                    st.dataframe(
+                        df[display_columns],
+                        hide_index=True,
+                        column_config={
+                            "ID": st.column_config.TextColumn("ID", width="small"),
+                            "filename": st.column_config.TextColumn("ファイル名", width="medium"),
+                            "chunk_id": st.column_config.TextColumn("チャンクID", width="small"),
+                            "大カテゴリ": st.column_config.TextColumn("大カテゴリ", width="medium"),
+                            "中カテゴリ": st.column_config.TextColumn("中カテゴリ", width="medium"),
+                            "市区町村": st.column_config.TextColumn("市区町村", width="medium"),
+                            "データ作成日": st.column_config.TextColumn("データ作成日", width="medium"),
+                            "アップロード日": st.column_config.TextColumn("アップロード日", width="medium"),
+                            "ソース元": st.column_config.TextColumn("ソース元", width="medium"),
+                            "text": st.column_config.TextColumn("テキスト", width="large"),
+                            "score": st.column_config.NumberColumn("スコア", width="small", format="%.3f")
+                        }
+                    )
+                except Exception as e:
+                    st.error(f"データの表示中にエラーが発生しました: {str(e)}")
+                    st.write("生データ:", data)
             else:
                 st.info("データベースにデータがありません。")
         except Exception as e:
