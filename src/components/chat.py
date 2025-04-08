@@ -39,9 +39,8 @@ def render_chat(pinecone_service: PineconeService):
     if "langchain_service" not in st.session_state:
         st.session_state.langchain_service = LangChainService()
     
-    # プロンプトテンプレートの初期化
-    if "prompt_templates" not in st.session_state:
-        st.session_state.prompt_templates = load_prompt_templates()
+    # プロンプトテンプレートの読み込み（毎回最新の状態を取得）
+    st.session_state.prompt_templates = load_prompt_templates()
     
     # サイドバーに履歴管理機能を配置
     with st.sidebar:
