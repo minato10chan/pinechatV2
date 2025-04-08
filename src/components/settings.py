@@ -166,13 +166,13 @@ def render_settings(pinecone_service: PineconeService):
                 # データフレームの作成
                 df = pd.DataFrame(data)
                 
-                # メタデータの列を追加
-                df['大カテゴリ'] = df['metadata'].apply(lambda x: x.get('main_category', ''))
-                df['中カテゴリ'] = df['metadata'].apply(lambda x: x.get('sub_category', ''))
-                df['市区町村'] = df['metadata'].apply(lambda x: x.get('city', ''))
-                df['データ作成日'] = df['metadata'].apply(lambda x: x.get('created_date', ''))
-                df['アップロード日'] = df['metadata'].apply(lambda x: x.get('upload_date', ''))
-                df['ソース元'] = df['metadata'].apply(lambda x: x.get('source', ''))
+                # メタデータの列を追加（メタデータが存在しない場合は空文字列を設定）
+                df['大カテゴリ'] = df['metadata'].apply(lambda x: x.get('main_category', '') if isinstance(x, dict) else '')
+                df['中カテゴリ'] = df['metadata'].apply(lambda x: x.get('sub_category', '') if isinstance(x, dict) else '')
+                df['市区町村'] = df['metadata'].apply(lambda x: x.get('city', '') if isinstance(x, dict) else '')
+                df['データ作成日'] = df['metadata'].apply(lambda x: x.get('created_date', '') if isinstance(x, dict) else '')
+                df['アップロード日'] = df['metadata'].apply(lambda x: x.get('upload_date', '') if isinstance(x, dict) else '')
+                df['ソース元'] = df['metadata'].apply(lambda x: x.get('source', '') if isinstance(x, dict) else '')
                 
                 # 表示する列を選択
                 display_columns = [
