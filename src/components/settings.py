@@ -176,21 +176,6 @@ def render_settings(pinecone_service: PineconeService):
                         'text', 'score'
                     ]
                     
-                    # 列名の日本語対応
-                    column_names = {
-                        'ID': 'ID',
-                        'filename': 'ファイル名',
-                        'chunk_id': 'チャンクID',
-                        'main_category': '大カテゴリ',
-                        'sub_category': '中カテゴリ',
-                        'city': '市区町村',
-                        'created_date': 'データ作成日',
-                        'upload_date': 'アップロード日',
-                        'source': 'ソース元',
-                        'text': 'テキスト',
-                        'score': 'スコア'
-                    }
-                    
                     # データフレームの表示
                     st.dataframe(
                         df[display_columns],

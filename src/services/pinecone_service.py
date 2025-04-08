@@ -285,10 +285,15 @@ class PineconeService:
         try:
             print(f"データ取得開始: top_k={top_k}")
             
+            # インデックスの統計情報を取得
+            stats = self.index.describe_index_stats()
+            total_vectors = stats.total_vector_count
+            print(f"インデックスの総ベクトル数: {total_vectors}")
+            
             # 空のベクトルでクエリを実行して全データを取得
             query_results = self.index.query(
                 vector=[0.0] * self.dimension,
-                top_k=top_k,
+                top_k=min(top_k, total_vectors),
                 include_metadata=True
             )
             
