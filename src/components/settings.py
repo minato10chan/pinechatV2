@@ -152,8 +152,28 @@ def render_settings(pinecone_service: PineconeService):
     st.header("データベース設定")
     if st.button("データベースの状態を確認"):
         try:
+            # インデックスの統計情報を取得
             stats = pinecone_service.get_index_stats()
+            st.subheader("データベースの概要")
             st.json(stats)
+            
+            # データを取得して表形式で表示
+            st.subheader("データベースの内容")
+            data = pinecone_service.get_index_data()
+            if data:
+                st.dataframe(
+                    data,
+                    column_config={
+                        "ID": st.column_config.TextColumn("ID", width="medium"),
+                        "ファイル名": st.column_config.TextColumn("ファイル名", width="medium"),
+                        "チャンクID": st.column_config.TextColumn("チャンクID", width="small"),
+                        "テキスト": st.column_config.TextColumn("テキスト", width="large"),
+                        "スコア": st.column_config.TextColumn("スコア", width="small")
+                    },
+                    hide_index=True
+                )
+            else:
+                st.info("データベースにデータがありません。")
         except Exception as e:
             st.error(f"データベースの状態取得に失敗しました: {str(e)}")
 

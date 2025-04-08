@@ -265,4 +265,34 @@ class PineconeService:
                     time.sleep(retry_delay)
                     retry_delay *= 2
                 else:
-                    raise Exception(f"インデックスのクリアに失敗しました（最大試行回数到達）: {str(e)}") 
+                    raise Exception(f"インデックスのクリアに失敗しました（最大試行回数到達）: {str(e)}")
+
+    def get_index_data(self, limit: int = 100) -> List[Dict[str, Any]]:
+        """インデックスのデータを取得"""
+        try:
+            # インデックスの統計情報を取得
+            stats = self.index.describe_index_stats()
+            total_vectors = stats.total_vector_count
+            
+            # データを取得
+            results = self.index.query(
+                vector=[0.0] * 1536,  # ダミーのベクトル
+                top_k=min(limit, total_vectors),
+                include_metadata=True
+            )
+            
+            # 結果を整形
+            data = []
+            for match in results.matches:
+                data.append({
+                    "ID": match.id,
+                    "ファイル名": match.metadata.get("filename", "不明"),
+                    "チャンクID": match.metadata.get("chunk_id", "不明"),
+                    "テキスト": match.metadata.get("text", "")[:100] + "..." if len(match.metadata.get("text", "")) > 100 else match.metadata.get("text", ""),
+                    "スコア": f"{match.score:.3f}"
+                })
+            
+            return data
+            
+        except Exception as e:
+            raise Exception(f"データの取得に失敗しました: {str(e)}") 
