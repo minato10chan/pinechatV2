@@ -290,6 +290,10 @@ class PineconeService:
             total_vectors = stats.total_vector_count
             print(f"インデックスの総ベクトル数: {total_vectors}")
             
+            if total_vectors == 0:
+                print("インデックスにデータが存在しません")
+                return []
+            
             # 空のベクトルでクエリを実行して全データを取得
             query_results = self.index.query(
                 vector=[0.0] * self.dimension,
@@ -320,8 +324,7 @@ class PineconeService:
                         "city": match.metadata.get("city", ""),
                         "created_date": match.metadata.get("created_date", ""),
                         "upload_date": match.metadata.get("upload_date", ""),
-                        "source": match.metadata.get("source", ""),
-                        "metadata": match.metadata
+                        "source": match.metadata.get("source", "")
                     }
                 else:
                     # メタデータが存在しない場合は空の値を設定
@@ -336,15 +339,14 @@ class PineconeService:
                         "city": "",
                         "created_date": "",
                         "upload_date": "",
-                        "source": "",
-                        "metadata": {}
+                        "source": ""
                     }
                 
                 results.append(result)
             
             print(f"\n取得したデータ数: {len(results)}")
-            print("最初のデータの例:")
             if results:
+                print("最初のデータの例:")
                 print(json.dumps(results[0], indent=2, ensure_ascii=False))
             
             return results

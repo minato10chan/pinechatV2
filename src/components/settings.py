@@ -159,48 +159,57 @@ def render_settings(pinecone_service: PineconeService):
             st.subheader("データベースの概要")
             st.json(stats)
             
-            # データを取得して表形式で表示
-            st.subheader("データベースの内容")
+            # データを取得
             data = pinecone_service.get_index_data()
             
             if data:
-                try:
-                    # データフレームの作成
-                    df = pd.DataFrame(data)
-                    print(f"データフレームの行数: {len(df)}")  # デバッグ用
-                    
-                    # 表示する列を選択
-                    display_columns = [
-                        'ID', 'filename', 'chunk_id', 'main_category', 'sub_category', 
-                        'city', 'created_date', 'upload_date', 'source', 
-                        'text', 'score'
-                    ]
-                    
-                    # データフレームの表示
-                    st.dataframe(
-                        df[display_columns],
-                        hide_index=True,
-                        column_config={
-                            "ID": st.column_config.TextColumn("ID", width="small"),
-                            "filename": st.column_config.TextColumn("ファイル名", width="medium"),
-                            "chunk_id": st.column_config.TextColumn("チャンクID", width="small"),
-                            "main_category": st.column_config.TextColumn("大カテゴリ", width="medium"),
-                            "sub_category": st.column_config.TextColumn("中カテゴリ", width="medium"),
-                            "city": st.column_config.TextColumn("市区町村", width="medium"),
-                            "created_date": st.column_config.TextColumn("データ作成日", width="medium"),
-                            "upload_date": st.column_config.TextColumn("アップロード日", width="medium"),
-                            "source": st.column_config.TextColumn("ソース元", width="medium"),
-                            "text": st.column_config.TextColumn("テキスト", width="large"),
-                            "score": st.column_config.NumberColumn("スコア", width="small", format="%.3f")
-                        }
-                    )
-                except Exception as e:
-                    st.error(f"データの表示中にエラーが発生しました: {str(e)}")
-                    st.write("生データ:", data)
+                st.subheader("データベースの内容")
+                # データフレームを作成
+                df = pd.DataFrame(data)
+                
+                # 列の順序を指定
+                columns = [
+                    'ID', 'filename', 'chunk_id', 'main_category', 'sub_category',
+                    'city', 'created_date', 'upload_date', 'source', 'text', 'score'
+                ]
+                
+                # 列名の日本語対応
+                column_names = {
+                    'ID': 'ID',
+                    'filename': 'ファイル名',
+                    'chunk_id': 'チャンクID',
+                    'main_category': '大カテゴリ',
+                    'sub_category': '中カテゴリ',
+                    'city': '市区町村',
+                    'created_date': 'データ作成日',
+                    'upload_date': 'アップロード日',
+                    'source': 'ソース元',
+                    'text': 'テキスト',
+                    'score': 'スコア'
+                }
+                
+                # 指定した列のみを選択し、日本語の列名に変換
+                df = df[columns].rename(columns=column_names)
+                
+                # テキスト列の幅を調整
+                st.dataframe(
+                    df,
+                    hide_index=True,
+                    column_config={
+                        "テキスト": st.column_config.TextColumn(
+                            "テキスト",
+                            width="large"
+                        )
+                    }
+                )
             else:
                 st.info("データベースにデータがありません。")
+                
         except Exception as e:
             st.error(f"データベースの状態取得に失敗しました: {str(e)}")
+            st.error(f"エラーの詳細: {type(e).__name__}")
+            import traceback
+            st.error(f"スタックトレース:\n{traceback.format_exc()}")
 
     if st.button("データベースをクリア"):
         if st.warning("本当にデータベースをクリアしますか？この操作は取り消せません。"):
