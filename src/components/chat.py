@@ -64,10 +64,18 @@ def render_chat(pinecone_service: PineconeService):
             st.text_area("システムプロンプト", value=selected_template_data["system_prompt"], disabled=True)
             st.text_area("応答テンプレート", value=selected_template_data["response_template"], disabled=True)
         
-        # 履歴の保存
-        if st.button("現在の履歴を保存"):
-            filename = save_chat_history(st.session_state.messages)
-            st.success(f"履歴を保存しました: {filename}")
+        # 履歴の保存 (ローカルダウンロード)
+        if st.session_state.messages:
+            history_json = json.dumps(st.session_state.messages, ensure_ascii=False, indent=2)
+            st.download_button(
+                label="履歴をダウンロード",
+                data=history_json,
+                file_name=f"chat_history_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+                mime="application/json",
+                key="download_history"
+            )
+        else:
+            st.button("履歴をダウンロード", disabled=True, key="download_history_disabled")
         
         # 履歴の読み込み
         uploaded_file = st.file_uploader("保存した履歴を読み込む", type=['json'])
