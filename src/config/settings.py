@@ -127,4 +127,54 @@ def load_default_prompts():
     return DEFAULT_SYSTEM_PROMPT, DEFAULT_RESPONSE_TEMPLATE
 
 # デフォルトプロンプトの読み込み
-DEFAULT_SYSTEM_PROMPT, DEFAULT_RESPONSE_TEMPLATE = load_default_prompts() 
+DEFAULT_SYSTEM_PROMPT, DEFAULT_RESPONSE_TEMPLATE = load_default_prompts()
+
+# メタデータ設定
+METADATA_CATEGORIES = {
+    "大カテゴリ": [
+        "行政情報",
+        "観光情報",
+        "イベント情報",
+        "生活情報",
+        "その他"
+    ],
+    "中カテゴリ": {
+        "行政情報": [
+            "市政情報",
+            "福祉・健康",
+            "教育・文化",
+            "防災・安全",
+            "その他"
+        ],
+        "観光情報": [
+            "観光スポット",
+            "イベント",
+            "グルメ",
+            "宿泊",
+            "その他"
+        ],
+        "イベント情報": [
+            "文化・芸術",
+            "スポーツ",
+            "祭り・催し",
+            "その他"
+        ],
+        "生活情報": [
+            "子育て",
+            "高齢者",
+            "環境",
+            "その他"
+        ],
+        "その他": [
+            "その他"
+        ]
+    },
+    "市区町村": [
+        "川越市",
+        "さいたま市",
+        "千葉市",
+        "横浜市",
+        "川崎市",
+        "相模原市",
+    ]
+} 
