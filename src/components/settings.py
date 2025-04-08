@@ -162,10 +162,12 @@ def render_settings(pinecone_service: PineconeService):
             # データを取得して表形式で表示
             st.subheader("データベースの内容")
             data = pinecone_service.get_index_data()
+            
             if data:
                 try:
                     # データフレームの作成
                     df = pd.DataFrame(data)
+                    print(f"データフレームの行数: {len(df)}")  # デバッグ用
                     
                     # メタデータの列を追加（メタデータが存在しない場合は空文字列を設定）
                     df['大カテゴリ'] = df['metadata'].apply(lambda x: x.get('main_category', '') if isinstance(x, dict) else '')

@@ -302,6 +302,7 @@ class PineconeService:
                 }
                 results.append(result)
             
+            print(f"取得したデータ数: {len(results)}")  # デバッグ用
             return results
         except Exception as e:
             print(f"データベースの状態取得に失敗しました: {str(e)}")
