@@ -33,6 +33,11 @@ class PineconeService:
             # インデックスの存在確認と初期化
             self._initialize_index()
             
+            # インデックスの次元数を取得
+            stats = self.index.describe_index_stats()
+            self.dimension = stats.dimension
+            print(f"インデックスの次元数: {self.dimension}")
+            
         except Exception as e:
             raise Exception(f"Pineconeサービスの初期化に失敗しました: {str(e)}")
 
