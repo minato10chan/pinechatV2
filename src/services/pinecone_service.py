@@ -286,10 +286,7 @@ class PineconeService:
             for match in results.matches:
                 data.append({
                     "ID": match.id,
-                    "ファイル名": match.metadata.get("filename", "不明"),
-                    "チャンクID": match.metadata.get("chunk_id", "不明"),
-                    "テキスト": match.metadata.get("text", "")[:100] + "..." if len(match.metadata.get("text", "")) > 100 else match.metadata.get("text", ""),
-                    "スコア": f"{match.score:.3f}"
+                    "テキスト": match.metadata.get("text", "")[:100] + "..." if len(match.metadata.get("text", "")) > 100 else match.metadata.get("text", "")
                 })
             
             return data

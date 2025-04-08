@@ -165,10 +165,7 @@ def render_settings(pinecone_service: PineconeService):
                     data,
                     column_config={
                         "ID": st.column_config.TextColumn("ID", width="medium"),
-                        "ファイル名": st.column_config.TextColumn("ファイル名", width="medium"),
-                        "チャンクID": st.column_config.TextColumn("チャンクID", width="small"),
                         "テキスト": st.column_config.TextColumn("テキスト", width="large"),
-                        "スコア": st.column_config.TextColumn("スコア", width="small")
                     },
                     hide_index=True
                 )
