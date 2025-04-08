@@ -11,6 +11,7 @@ from ..config.settings import (
     DEFAULT_TOP_K,
     SIMILARITY_THRESHOLD
 )
+import json
 
 class PineconeService:
     def __init__(self):
@@ -282,6 +283,8 @@ class PineconeService:
     def get_index_data(self, top_k: int = 100) -> List[Dict]:
         """インデックスのデータを取得"""
         try:
+            print(f"データ取得開始: top_k={top_k}")
+            
             # 空のベクトルでクエリを実行して全データを取得
             query_results = self.index.query(
                 vector=[0.0] * self.dimension,
@@ -289,9 +292,16 @@ class PineconeService:
                 include_metadata=True
             )
             
+            print(f"クエリ結果: {len(query_results.matches)}件のマッチ")
+            
             # 結果を整形
             results = []
-            for match in query_results.matches:
+            for i, match in enumerate(query_results.matches, 1):
+                print(f"\nマッチ {i}/{len(query_results.matches)}:")
+                print(f"  ID: {match.id}")
+                print(f"  スコア: {match.score}")
+                print(f"  メタデータ: {match.metadata}")
+                
                 result = {
                     "ID": match.id,
                     "score": match.score,
@@ -302,8 +312,15 @@ class PineconeService:
                 }
                 results.append(result)
             
-            print(f"取得したデータ数: {len(results)}")  # デバッグ用
+            print(f"\n取得したデータ数: {len(results)}")
+            print("最初のデータの例:")
+            if results:
+                print(json.dumps(results[0], indent=2, ensure_ascii=False))
+            
             return results
         except Exception as e:
             print(f"データベースの状態取得に失敗しました: {str(e)}")
+            print(f"エラーの詳細: {type(e).__name__}")
+            import traceback
+            print(f"スタックトレース:\n{traceback.format_exc()}")
             return [] 
