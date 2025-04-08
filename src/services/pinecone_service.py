@@ -302,14 +302,39 @@ class PineconeService:
                 print(f"  スコア: {match.score}")
                 print(f"  メタデータ: {match.metadata}")
                 
-                result = {
-                    "ID": match.id,
-                    "score": match.score,
-                    "text": match.metadata.get("text", "") if match.metadata else "",
-                    "filename": match.metadata.get("filename", "") if match.metadata else "",
-                    "chunk_id": match.metadata.get("chunk_id", "") if match.metadata else "",
-                    "metadata": match.metadata if match.metadata else {}
-                }
+                # メタデータが存在する場合はそのまま使用
+                if match.metadata:
+                    result = {
+                        "ID": match.id,
+                        "score": match.score,
+                        "text": match.metadata.get("text", ""),
+                        "filename": match.metadata.get("filename", ""),
+                        "chunk_id": match.metadata.get("chunk_id", ""),
+                        "main_category": match.metadata.get("main_category", ""),
+                        "sub_category": match.metadata.get("sub_category", ""),
+                        "city": match.metadata.get("city", ""),
+                        "created_date": match.metadata.get("created_date", ""),
+                        "upload_date": match.metadata.get("upload_date", ""),
+                        "source": match.metadata.get("source", ""),
+                        "metadata": match.metadata
+                    }
+                else:
+                    # メタデータが存在しない場合は空の値を設定
+                    result = {
+                        "ID": match.id,
+                        "score": match.score,
+                        "text": "",
+                        "filename": "",
+                        "chunk_id": "",
+                        "main_category": "",
+                        "sub_category": "",
+                        "city": "",
+                        "created_date": "",
+                        "upload_date": "",
+                        "source": "",
+                        "metadata": {}
+                    }
+                
                 results.append(result)
             
             print(f"\n取得したデータ数: {len(results)}")
