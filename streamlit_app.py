@@ -45,7 +45,7 @@ def read_file_content(file) -> str:
 def main():
     # サイドバーにメニューを配置
     with st.sidebar:
-        st.title("メニュー")
+        st.title("管理者メニュー")
         page = st.radio(
             "機能を選択",
             ["チャット", "ファイルアップロード", "設定"],
