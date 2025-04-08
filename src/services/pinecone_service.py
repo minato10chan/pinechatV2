@@ -304,5 +304,5 @@ class PineconeService:
             
             return results
         except Exception as e:
-            st.error(f"データベースの状態取得に失敗しました: {str(e)}")
+            print(f"データベースの状態取得に失敗しました: {str(e)}")
             return [] 
