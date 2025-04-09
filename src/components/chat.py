@@ -7,6 +7,7 @@ from src.config.settings import (
     DEFAULT_PROMPT_TEMPLATES,
     load_prompt_templates
 )
+import streamlit.components.v1 as components
 
 def save_chat_history(messages, filename=None):
     """チャット履歴をJSONファイルとして保存"""
@@ -63,6 +64,14 @@ def render_chat(pinecone_service: PineconeService):
         with st.expander("選択中のテンプレート"):
             st.text_area("システムプロンプト", value=selected_template_data["system_prompt"], disabled=True)
             st.text_area("応答テンプレート", value=selected_template_data["response_template"], disabled=True)
+        
+        # 地図表示用の iFrame を埋め込む
+        st.subheader("地図表示")
+        components.html(
+            '<iframe id="REMapframe" scrolling="no" src="https://d2zh29j4gxsfxo.cloudfront.net/remapModule?apiKey=XiH3xNCT5HLWSJJn81OE7h4BkZddNhKzRBPUMQ50&itemId=9120240433865&created_date=&build_name=千代田プロジェクト&build_type=mansion&build_latitude=35.3388615&build_longitude=139.4909335&center_latitude=&center_longitude=&initial_zoom=15&container1=Facilities-公共・医療&design=Nova-color999999"></iframe>',
+            height=520,
+            scrolling=False
+        )
         
         # 履歴の保存 (ローカルダウンロード)
         if st.session_state.messages:
