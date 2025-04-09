@@ -153,5 +153,11 @@ def render_chat(pinecone_service: PineconeService):
             })
             with st.chat_message("assistant"):
                 st.markdown(response)
+                # 地図を表示
+                components.html(
+                    '<iframe id="REMapframe" scrolling="no" src="https://d2zh29j4gxsfxo.cloudfront.net/remapModule?apiKey=XiH3xNCT5HLWSJJn81OE7h4BkZddNhKzRBPUMQ50&itemId=9120240433865&created_date=&build_name=千代田プロジェクト&build_type=mansion&build_latitude=35.3388615&build_longitude=139.4909335&center_latitude=&center_longitude=&initial_zoom=15&container1=Facilities-公共・医療&design=Nova-color999999"></iframe>',
+                    height=520,
+                    scrolling=False
+                )
                 with st.expander("詳細情報"):
                     st.json(details) 
