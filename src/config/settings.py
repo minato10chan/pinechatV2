@@ -6,6 +6,7 @@ import streamlit as st
 import os
 import json
 from dotenv import load_dotenv
+from datetime import datetime
 
 # 環境変数の読み込み
 load_dotenv()
@@ -28,6 +29,18 @@ EMBEDDING_MODEL = "text-embedding-ada-002"  # 使用する埋め込みモデル
 # Search Settings
 DEFAULT_TOP_K = 10  # デフォルトの検索結果数
 SIMILARITY_THRESHOLD = 0.7  # 類似度のしきい値（0-1の範囲）
+
+# Metadata Settings
+DEFAULT_CREATION_DATE = datetime.now().strftime("%Y-%m-%d %H:%M:%S")  # メタデータの作成日が空の場合のデフォルト値
+
+def get_metadata_creation_date(metadata):
+    """
+    メタデータの作成日を取得する関数
+    作成日が空の場合は現在の日時を返す
+    """
+    if not metadata or "creation_date" not in metadata or not metadata["creation_date"]:
+        return DEFAULT_CREATION_DATE
+    return metadata["creation_date"]
 
 # Prompt Settings
 DEFAULT_SYSTEM_PROMPT = """あなたは親切で丁寧なAIアシスタントです。
