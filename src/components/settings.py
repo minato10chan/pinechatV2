@@ -167,40 +167,36 @@ def render_settings(pinecone_service: PineconeService):
                 # データフレームを作成
                 df = pd.DataFrame(data)
                 
-                # 列の順序を指定
-                columns = [
-                    'ID', 'filename', 'chunk_id', 'main_category', 'sub_category',
-                    'city', 'created_date', 'upload_date', 'source', 'text', 'score'
-                ]
+                # ファイルごとにグループ化して集計
+                df_grouped = df.groupby('filename').agg({
+                    'chunk_id': 'count',
+                    'main_category': 'first',
+                    'sub_category': 'first',
+                    'city': 'first',
+                    'created_date': 'first',
+                    'upload_date': 'first',
+                    'source': 'first'
+                }).reset_index()
                 
                 # 列名の日本語対応
                 column_names = {
-                    'ID': 'ID',
                     'filename': 'ファイル名',
-                    'chunk_id': 'チャンクID',
+                    'chunk_id': 'チャンク数',
                     'main_category': '大カテゴリ',
                     'sub_category': '中カテゴリ',
                     'city': '市区町村',
                     'created_date': 'データ作成日',
                     'upload_date': 'アップロード日',
-                    'source': 'ソース元',
-                    'text': 'テキスト',
-                    'score': 'スコア'
+                    'source': 'ソース元'
                 }
                 
-                # 指定した列のみを選択し、日本語の列名に変換
-                df = df[columns].rename(columns=column_names)
+                # 列名を日本語に変換
+                df_grouped = df_grouped.rename(columns=column_names)
                 
-                # テキスト列の幅を調整
+                # データフレームを表示
                 st.dataframe(
-                    df,
-                    hide_index=True,
-                    column_config={
-                        "テキスト": st.column_config.TextColumn(
-                            "テキスト",
-                            width="large"
-                        )
-                    }
+                    df_grouped,
+                    hide_index=True
                 )
             else:
                 st.info("データベースにデータがありません。")
@@ -210,14 +206,6 @@ def render_settings(pinecone_service: PineconeService):
             st.error(f"エラーの詳細: {type(e).__name__}")
             import traceback
             st.error(f"スタックトレース:\n{traceback.format_exc()}")
-
-    if st.button("データベースをクリア"):
-        if st.warning("本当にデータベースをクリアしますか？この操作は取り消せません。"):
-            try:
-                pinecone_service.clear_index()
-                st.success("データベースをクリアしました。")
-            except Exception as e:
-                st.error(f"データベースのクリアに失敗しました: {str(e)}")
 
     # 設定の保存
     if st.button("設定を保存"):
