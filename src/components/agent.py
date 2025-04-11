@@ -9,13 +9,13 @@ def render_agent(pinecone_service: PineconeService):
     
     if user_input:
         # Pineconeから関連情報を検索
-        search_results = pinecone_service.search(user_input, top_k=3)
+        search_results = pinecone_service.query(user_input, top_k=3)
         
         # 検索結果の表示
         st.subheader("関連情報")
-        for result in search_results:
-            st.write(f"スコア: {result['score']:.2f}")
-            st.write(result['metadata']['text'])
+        for match in search_results["matches"]:
+            st.write(f"スコア: {match.score:.2f}")
+            st.write(match.metadata["text"])
             st.write("---")
         
         # タスクの実行結果を表示（将来的にツール実行機能を追加）
