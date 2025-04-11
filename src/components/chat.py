@@ -145,29 +145,5 @@ def render_chat(pinecone_service: PineconeService):
             })
             with st.chat_message("assistant"):
                 st.markdown(response)
-                # 地図を表示
-                try:
-                    with st.spinner("地図を読み込み中..."):
-                        components.html(
-                            '''
-                            <div style="position: relative; width: 100%; height: 520px;">
-                                <iframe 
-                                    id="REMapframe" 
-                                    style="width: 100%; height: 100%; border: none;"
-                                    src="https://d2zh29j4gxsfxo.cloudfront.net/remapModule?apiKey=XiH3xNCT5HLWSJJn81OE7h4BkZddNhKzRBPUMQ50&itemId=9120240433865&created_date=&build_name=千代田プロジェクト&build_type=mansion&build_latitude=35.3388615&build_longitude=139.4909335&center_latitude=&center_longitude=&initial_zoom=15&container1=Facilities-公共・医療&design=Module-color999999"
-                                    onload="this.style.opacity='1'"
-                                    onerror="this.style.display='none'; document.getElementById('map-error').style.display='block'"
-                                ></iframe>
-                                <div id="map-error" style="display: none; text-align: center; padding: 20px;">
-                                    地図の読み込みに失敗しました。ページを更新して再度お試しください。
-                                </div>
-                            </div>
-                            ''',
-                            height=520,
-                            scrolling=False
-                        )
-                except Exception as e:
-                    st.error(f"地図の表示中にエラーが発生しました: {str(e)}")
-                    st.info("ページを更新して再度お試しください。")
                 with st.expander("詳細情報"):
                     st.json(details) 
