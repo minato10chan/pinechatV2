@@ -285,7 +285,7 @@ class PineconeService:
                 else:
                     raise Exception(f"インデックスのクリアに失敗しました（最大試行回数到達）: {str(e)}")
 
-    def get_index_data(self, top_k: int = 100) -> List[Dict]:
+    def get_index_data(self, top_k: int = 1000) -> List[Dict]:
         """インデックスのデータを取得"""
         try:
             print(f"データ取得開始: top_k={top_k}")
