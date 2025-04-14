@@ -69,7 +69,7 @@ def render_settings(pinecone_service: PineconeService):
             top_k = st.number_input(
                 "🔢 検索結果数",
                 min_value=1,
-                max_value=20,
+                max_value=1000,
                 value=st.session_state.get("top_k", DEFAULT_TOP_K),
                 help="検索時に返す結果の数。多いほど関連性の低い結果も含まれます。"
             )
