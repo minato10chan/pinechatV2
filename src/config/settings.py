@@ -27,7 +27,7 @@ BATCH_SIZE = 100  # Pineconeへのアップロード時のバッチサイズ
 EMBEDDING_MODEL = "text-embedding-ada-002"  # 使用する埋め込みモデル
 
 # Search Settings
-DEFAULT_TOP_K = 1000  # デフォルトの検索結果数
+DEFAULT_TOP_K = 10  # デフォルトの検索結果数
 SIMILARITY_THRESHOLD = 0.7  # 類似度のしきい値（0-1の範囲）
 
 # Metadata Settings

@@ -57,7 +57,7 @@ class PineconeService:
                     # インデックスが存在しない場合は作成
                     spec = ServerlessSpec(
                         cloud="aws",
-                        region="us-west-2"
+                        region="us-east-1"
                     )
                     self.pc.create_index(
                         name=PINECONE_INDEX_NAME,
