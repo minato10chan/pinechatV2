@@ -12,12 +12,12 @@ from datetime import datetime
 load_dotenv()
 
 # API Keys
-PINECONE_API_KEY = st.secrets["pinecone_key"]
-OPENAI_API_KEY = st.secrets["openai_api_key"]
+PINECONE_API_KEY = os.getenv("PINECONE_API_KEY") or st.secrets.get("pinecone_key")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY") or st.secrets.get("openai_api_key")
 
 # Pinecone Settings
-PINECONE_INDEX_NAME = st.secrets["index_name"]
-PINECONE_ASSISTANT_NAME = st.secrets["assistant_name"]
+PINECONE_INDEX_NAME = os.getenv("PINECONE_INDEX_NAME") or st.secrets.get("index_name")
+PINECONE_ASSISTANT_NAME = os.getenv("PINECONE_ASSISTANT_NAME") or st.secrets.get("assistant_name")
 
 # Text Processing Settings
 CHUNK_SIZE = 500  # テキストを分割する際の1チャンクあたりの文字数
@@ -27,7 +27,7 @@ BATCH_SIZE = 100  # Pineconeへのアップロード時のバッチサイズ
 EMBEDDING_MODEL = "text-embedding-ada-002"  # 使用する埋め込みモデル
 
 # Search Settings
-DEFAULT_TOP_K = 10  # デフォルトの検索結果数
+DEFAULT_TOP_K = 1000  # デフォルトの検索結果数
 SIMILARITY_THRESHOLD = 0.7  # 類似度のしきい値（0-1の範囲）
 
 # Metadata Settings
