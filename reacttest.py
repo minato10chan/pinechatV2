@@ -2,7 +2,7 @@ import os
 from flask import Flask, redirect, render_template, send_from_directory
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-REACT_HOST_DIR = os.path.join(BASE_DIR, 'MFtest', 'react-host')
+REACT_HOST_DIR = "https://remap.itot.jp/MFtest/react-host"
 
 app = Flask(__name__, static_folder=os.path.join(REACT_HOST_DIR, 'static'), static_url_path='/static')
 
