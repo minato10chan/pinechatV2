@@ -36,6 +36,18 @@ def render_chat(pinecone_service: PineconeService):
     st.title("チャット")
     st.write("アップロードしたドキュメントについて質問できます。")
     
+    # ハザードマップの表示
+    st.header("ハザードマップ")
+    hazard_map_html = """
+    <iframe
+        src="http://localhost:5000/hazard"
+        width="100%"
+        height="500"
+        style="border: none;"
+    ></iframe>
+    """
+    components.html(hazard_map_html, height=500)
+    
     # LangChainサービスの初期化
     if "langchain_service" not in st.session_state:
         st.session_state.langchain_service = LangChainService()

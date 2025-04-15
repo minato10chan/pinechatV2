@@ -1,4 +1,6 @@
 import streamlit as st
+import subprocess
+import threading
 from src.utils.text_processing import process_text_file
 from src.services.pinecone_service import PineconeService
 from src.components.file_upload import render_file_upload
@@ -42,6 +44,15 @@ def read_file_content(file) -> str:
             continue
     
     raise ValueError("ファイルのエンコーディングを特定できませんでした。UTF-8、Shift-JIS、CP932、EUC-JPのいずれかで保存されているファイルをアップロードしてください。")
+
+def start_flask_server():
+    """Flaskサーバーを起動する"""
+    subprocess.run(["python", "reacttest.py"])
+
+# Flaskサーバーを別スレッドで起動
+flask_thread = threading.Thread(target=start_flask_server)
+flask_thread.daemon = True
+flask_thread.start()
 
 def main():
     # サイドバーにメニューを配置
