@@ -31,6 +31,34 @@ def load_chat_history(file):
     data = json.load(file)
     return data.get("messages", [])
 
+def get_property_info(query: str, pinecone_service: PineconeService) -> str:
+    """物件情報を検索して返す"""
+    try:
+        # Pineconeから物件情報を検索
+        results = pinecone_service.query(
+            query=query,
+            top_k=3,
+            namespace="property"
+        )
+        
+        if not results:
+            return "物件情報が見つかりませんでした。"
+            
+        property_info = []
+        for match in results:
+            metadata = match.metadata
+            info = f"""
+物件名: {metadata.get('name', '不明')}
+場所: {metadata.get('location', '不明')}
+タイプ: {metadata.get('type', '不明')}
+詳細: {metadata.get('details', '不明')}
+"""
+            property_info.append(info)
+            
+        return "\n".join(property_info)
+    except Exception as e:
+        return f"物件情報の取得中にエラーが発生しました: {str(e)}"
+
 def render_chat(pinecone_service: PineconeService):
     """チャット機能のUIを表示"""
     st.title("チャット")
@@ -55,6 +83,23 @@ def render_chat(pinecone_service: PineconeService):
             template_names,
             index=0
         )
+        
+        # 物件情報の選択
+        st.header("物件情報")
+        property_selection = st.selectbox(
+            "物件情報の参照方法を選択",
+            options=["全ての物件", "特定の物件を検索"],
+            index=0
+        )
+        
+        if property_selection == "特定の物件を検索":
+            search_query = st.text_input("物件検索キーワード（物件名、場所、特徴など）")
+            if search_query:
+                st.session_state.property_info = get_property_info(search_query, pinecone_service)
+            else:
+                st.session_state.property_info = "物件情報が見つかりませんでした。"
+        else:
+            st.session_state.property_info = "全ての物件情報を参照します。"
         
         # 選択されたテンプレートの内容を表示
         selected_template_data = next(
@@ -134,7 +179,8 @@ def render_chat(pinecone_service: PineconeService):
             response, details = st.session_state.langchain_service.get_response(
                 prompt,
                 system_prompt=selected_template_data["system_prompt"],
-                response_template=selected_template_data["response_template"]
+                response_template=selected_template_data["response_template"],
+                property_info=st.session_state.get("property_info", "物件情報が見つかりませんでした。")
             )
             
             # アシスタントの応答を表示
