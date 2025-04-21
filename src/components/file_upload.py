@@ -6,6 +6,7 @@ from datetime import datetime
 import pandas as pd
 import json
 import traceback
+import io
 
 def read_file_content(file) -> str:
     """ファイルの内容を適切なエンコーディングで読み込む"""
@@ -29,6 +30,29 @@ def read_file_content(file) -> str:
     except Exception as e:
         raise ValueError(f"ファイルのエンコーディングを特定できませんでした。エラー: {str(e)}")
 
+def process_csv_file(file):
+    """CSVファイルを処理してチャンクに分割"""
+    try:
+        # CSVファイルを読み込む
+        df = pd.read_csv(file)
+        
+        # 各列を結合してテキストを作成
+        chunks = []
+        for _, row in df.iterrows():
+            # 各行をテキストに変換
+            text = " ".join([str(val) for val in row.values if pd.notna(val)])
+            if text.strip():
+                chunks.append({
+                    "text": text,
+                    "metadata": {
+                        "row_data": row.to_dict()
+                    }
+                })
+        
+        return chunks
+    except Exception as e:
+        raise ValueError(f"CSVファイルの処理に失敗しました: {str(e)}")
+
 def render_file_upload(pinecone_service: PineconeService):
     """ファイルアップロード機能のUIを表示"""
     st.title("📄 ファイルアップロード")
@@ -39,7 +63,7 @@ def render_file_upload(pinecone_service: PineconeService):
         # ファイルのアップロード
         uploaded_file = st.file_uploader(
             "ファイルを選択",
-            type=["txt", "pdf", "doc", "docx"],
+            type=["txt", "pdf", "doc", "docx", "csv"],
             help="アップロードするファイルを選択してください"
         )
         
@@ -81,18 +105,31 @@ def render_file_upload(pinecone_service: PineconeService):
                     return
                 
                 # ファイルの処理
-                chunks = process_text_file(uploaded_file)
+                file_extension = uploaded_file.name.split('.')[-1].lower()
+                
+                if file_extension == 'csv':
+                    # CSVファイルの処理
+                    chunks = process_csv_file(uploaded_file)
+                else:
+                    # その他のファイルの処理
+                    chunks = process_text_file(uploaded_file)
                 
                 # メタデータの追加
                 for chunk in chunks:
+                    # 既存のメタデータがある場合は保持
+                    existing_metadata = chunk.get("metadata", {})
+                    
+                    # 共通のメタデータを追加
                     chunk["metadata"] = {
+                        **existing_metadata,
                         "filename": filename,
                         "main_category": main_category,
-                        "sub_categories": sub_categories,  # 複数のカテゴリをリストとして保存
+                        "sub_categories": sub_categories,
                         "city": city,
                         "created_date": pd.Timestamp.now().strftime("%Y-%m-%d"),
                         "upload_date": pd.Timestamp.now().strftime("%Y-%m-%d"),
-                        "source": "file_upload"
+                        "source": "file_upload",
+                        "file_type": file_extension
                     }
                 
                 # Pineconeへのアップロード
