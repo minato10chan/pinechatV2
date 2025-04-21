@@ -291,4 +291,28 @@ class PineconeService:
                 for match in results.matches
             ]
         except Exception as e:
-            raise Exception(f"インデックスデータの取得に失敗しました: {str(e)}") 
+            raise Exception(f"インデックスデータの取得に失敗しました: {str(e)}")
+
+    def get_stats(self, namespace: str = None) -> dict:
+        """指定されたnamespaceの統計情報を取得"""
+        try:
+            stats = self.index.describe_index_stats()
+            if namespace:
+                return stats.get('namespaces', {}).get(namespace, {})
+            return stats
+        except Exception as e:
+            raise Exception(f"統計情報の取得に失敗しました: {str(e)}")
+
+    def list_vectors(self, namespace: str = None, limit: int = 1000) -> list:
+        """指定されたnamespaceのベクトルを取得"""
+        try:
+            # 空のクエリで全ベクトルを取得
+            results = self.index.query(
+                vector=[0] * 1536,  # ダミーベクトル（次元数はモデルに依存）
+                top_k=limit,
+                include_metadata=True,
+                namespace=namespace
+            )
+            return results.matches
+        except Exception as e:
+            raise Exception(f"ベクトルの取得に失敗しました: {str(e)}") 
