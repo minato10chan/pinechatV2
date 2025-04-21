@@ -193,27 +193,6 @@ def render_settings(pinecone_service: PineconeService):
         
         if st.button("🔄 データベースの状態を確認", type="primary"):
             try:
-                # 各namespaceの統計情報を取得
-                namespaces = ["default", "property"]
-                stats = {}
-                
-                for namespace in namespaces:
-                    try:
-                        stats[namespace] = pinecone_service.get_stats(namespace=namespace)
-                    except Exception as e:
-                        st.error(f"{namespace} namespaceの統計情報取得に失敗しました: {str(e)}")
-                        continue
-                
-                # 統計情報の表示
-                for namespace, stat in stats.items():
-                    st.write(f"### {namespace} namespace")
-                    if stat:
-                        st.write(f"- 総ドキュメント数: {stat.get('total_vector_count', 0)}")
-                        st.write(f"- 次元数: {stat.get('dimension', 0)}")
-                        st.write(f"- インデックス名: {stat.get('index_full_name', 'N/A')}")
-                    else:
-                        st.write("統計情報が取得できませんでした。")
-                
                 # インデックスの統計情報を取得
                 stats = pinecone_service.get_index_stats()
                 
@@ -264,6 +243,7 @@ def render_settings(pinecone_service: PineconeService):
                     st.info("ℹ️ データベースにデータがありません。")
                 
                 # 各namespaceのデータを取得して表示
+                namespaces = ["default", "property"]
                 for namespace in namespaces:
                     try:
                         vectors = pinecone_service.list_vectors(namespace=namespace)

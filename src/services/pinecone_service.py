@@ -273,23 +273,35 @@ class PineconeService:
         except Exception as e:
             raise Exception(f"インデックスのクリアに失敗しました: {str(e)}")
 
-    def get_index_data(self, namespace: str = None, top_k: int = 1000) -> List[Dict]:
+    def get_index_data(self) -> List[Dict]:
         """インデックスのデータを取得"""
         try:
+            # デフォルトnamespaceのデータを取得
             results = self.index.query(
-                vector=[0] * self.dimension,  # ダミーベクトル
-                top_k=top_k,
+                vector=[0] * 1536,  # ダミーベクトル
+                top_k=1000,
                 include_metadata=True,
-                namespace=namespace
+                namespace=""
             )
-            return [
-                {
-                    "id": match.id,
-                    "score": match.score,
-                    "metadata": match.metadata
-                }
-                for match in results.matches
-            ]
+            
+            data = []
+            for match in results.matches:
+                if 'metadata' in match:
+                    metadata = match['metadata']
+                    # 必要なメタデータを抽出
+                    item = {
+                        'filename': metadata.get('filename', ''),
+                        'chunk_id': metadata.get('chunk_id', ''),
+                        'main_category': metadata.get('main_category', ''),
+                        'sub_category': metadata.get('sub_category', ''),
+                        'city': metadata.get('city', ''),
+                        'created_date': metadata.get('created_date', ''),
+                        'upload_date': metadata.get('upload_date', ''),
+                        'source': metadata.get('source', '')
+                    }
+                    data.append(item)
+            
+            return data
         except Exception as e:
             raise Exception(f"インデックスデータの取得に失敗しました: {str(e)}")
 
