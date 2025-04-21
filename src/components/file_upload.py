@@ -84,11 +84,17 @@ def render_file_upload(pinecone_service: PineconeService):
         
         # 中カテゴリの選択（複数選択可能）
         if main_category:
-            sub_categories = st.multiselect(
-                "中カテゴリ",
-                METADATA_CATEGORIES["中カテゴリ"][main_category],
-                help=f"{main_category}に関連する中カテゴリを選択してください（複数選択可）"
-            )
+            # 選択された大カテゴリに対応する中カテゴリを取得
+            available_sub_categories = METADATA_CATEGORIES["中カテゴリ"].get(main_category, [])
+            if available_sub_categories:
+                sub_categories = st.multiselect(
+                    "中カテゴリ",
+                    available_sub_categories,
+                    help=f"{main_category}に関連する中カテゴリを選択してください（複数選択可）"
+                )
+            else:
+                sub_categories = []
+                st.warning(f"⚠️ {main_category}に対応する中カテゴリが設定されていません。")
         else:
             sub_categories = []
             st.info("ℹ️ 中カテゴリを選択するには、まず大カテゴリを選択してください。")
