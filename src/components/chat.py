@@ -100,7 +100,15 @@ def render_chat(pinecone_service: PineconeService):
             template_names,
             index=0
         )
-        
+                # 選択されたテンプレートの内容を表示
+        selected_template_data = next(
+            template for template in st.session_state.prompt_templates 
+            if template["name"] == selected_template
+        )
+        with st.expander("選択中のテンプレート"):
+            st.text_area("システムプロンプト", value=selected_template_data["system_prompt"], disabled=True)
+            st.text_area("応答テンプレート", value=selected_template_data["response_template"], disabled=True)
+            
         # 物件情報の選択
         st.header("物件情報")
         properties = get_property_list(pinecone_service)
@@ -126,15 +134,6 @@ def render_chat(pinecone_service: PineconeService):
         else:
             st.warning("物件情報が登録されていません。")
             st.session_state.property_info = "物件情報が登録されていません。"
-        
-        # 選択されたテンプレートの内容を表示
-        selected_template_data = next(
-            template for template in st.session_state.prompt_templates 
-            if template["name"] == selected_template
-        )
-        with st.expander("選択中のテンプレート"):
-            st.text_area("システムプロンプト", value=selected_template_data["system_prompt"], disabled=True)
-            st.text_area("応答テンプレート", value=selected_template_data["response_template"], disabled=True)
         
         # 履歴の保存 (ローカルダウンロード)
         if st.session_state.messages:
