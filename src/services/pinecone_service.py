@@ -327,4 +327,27 @@ class PineconeService:
             )
             return results.matches
         except Exception as e:
-            raise Exception(f"ベクトルの取得に失敗しました: {str(e)}") 
+            raise Exception(f"ベクトルの取得に失敗しました: {str(e)}")
+
+    def get_by_id(self, vector_id: str, namespace: str = None) -> Dict[str, Any]:
+        """指定されたIDのベクトルを取得"""
+        try:
+            # ベクトルを取得
+            result = self.index.fetch(ids=[vector_id], namespace=namespace)
+            
+            if not result.vectors:
+                return None
+                
+            # 最初のベクトルを取得
+            vector = result.vectors[vector_id]
+            
+            # 結果を整形
+            return {
+                "id": vector.id,
+                "values": vector.values,
+                "metadata": vector.metadata,
+                "text": vector.metadata.get("text", "")
+            }
+        except Exception as e:
+            print(f"ベクトルの取得中にエラーが発生しました: {str(e)}")
+            return None 
