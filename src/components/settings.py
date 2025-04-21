@@ -191,94 +191,82 @@ def render_settings(pinecone_service: PineconeService):
         st.markdown("### データベースの状態")
         st.markdown("Pineconeデータベースの状態を確認します。")
         
-        # データベースの状態確認
-        st.subheader("データベースの状態")
-        try:
-            # 各namespaceの統計情報を取得
-            namespaces = ["default", "property"]
-            stats = {}
-            
-            for namespace in namespaces:
-                try:
-                    stats[namespace] = pinecone_service.get_stats(namespace=namespace)
-                except Exception as e:
-                    st.error(f"{namespace} namespaceの統計情報取得に失敗しました: {str(e)}")
-                    continue
-            
-            # 統計情報の表示
-            for namespace, stat in stats.items():
-                st.write(f"### {namespace} namespace")
-                if stat:
-                    st.write(f"- 総ドキュメント数: {stat.get('total_vector_count', 0)}")
-                    st.write(f"- 次元数: {stat.get('dimension', 0)}")
-                    st.write(f"- インデックス名: {stat.get('index_full_name', 'N/A')}")
-                else:
-                    st.write("統計情報が取得できませんでした。")
-            
-            # メタデータの表示
-            st.subheader("メタデータの統計")
-            for namespace in namespaces:
-                try:
-                    vectors = pinecone_service.list_vectors(namespace=namespace)
-                    if vectors:
-                        # メタデータをDataFrameに変換
-                        metadata_list = []
-                        for vector in vectors:
-                            if 'metadata' in vector:
-                                metadata = vector['metadata']
-                                metadata['namespace'] = namespace
-                                metadata_list.append(metadata)
-                        
-                        if metadata_list:
-                            df = pd.DataFrame(metadata_list)
-                            
-                            # namespaceごとに統計情報を表示
-                            st.write(f"### {namespace} namespaceのメタデータ統計")
-                            
-                            if namespace == "property":
-                                # 物件情報の統計
-                                if 'property_type' in df.columns:
-                                    st.write("#### 物件種別の分布")
-                                    st.bar_chart(df['property_type'].value_counts())
-                                
-                                if 'prefecture' in df.columns:
-                                    st.write("#### 都道府県の分布")
-                                    st.bar_chart(df['prefecture'].value_counts())
-                                
-                                if 'city' in df.columns:
-                                    st.write("#### 市区町村の分布")
-                                    st.bar_chart(df['city'].value_counts())
-                                
-                                if 'layout' in df.columns:
-                                    st.write("#### 間取りの分布")
-                                    st.bar_chart(df['layout'].value_counts())
-                            
-                            else:
-                                # デフォルトnamespaceの統計
-                                if 'main_category' in df.columns:
-                                    st.write("#### 大カテゴリの分布")
-                                    st.bar_chart(df['main_category'].value_counts())
-                                
-                                if 'sub_category' in df.columns:
-                                    st.write("#### 中カテゴリの分布")
-                                    st.bar_chart(df['sub_category'].value_counts())
-                                
-                                if 'city' in df.columns:
-                                    st.write("#### 市区町村の分布")
-                                    st.bar_chart(df['city'].value_counts())
-                                
-                                if 'created_date' in df.columns:
-                                    st.write("#### データ作成日の分布")
-                                    df['created_date'] = pd.to_datetime(df['created_date'])
-                                    st.line_chart(df['created_date'].value_counts().sort_index())
-                except Exception as e:
-                    st.error(f"{namespace} namespaceのメタデータ取得に失敗しました: {str(e)}")
-                    continue
+        if st.button("🔄 データベースの状態を確認", type="primary"):
+            try:
+                # 各namespaceの統計情報を取得
+                namespaces = ["default", "property"]
+                stats = {}
                 
-        except Exception as e:
-            st.error(f"データベースの状態取得に失敗しました: {str(e)}")
-            st.error(f"🔍 エラーの詳細: {type(e).__name__}")
-            st.error(f"📜 スタックトレース: {traceback.format_exc()}")
+                for namespace in namespaces:
+                    try:
+                        stats[namespace] = pinecone_service.get_stats(namespace=namespace)
+                    except Exception as e:
+                        st.error(f"{namespace} namespaceの統計情報取得に失敗しました: {str(e)}")
+                        continue
+                
+                # 統計情報の表示
+                for namespace, stat in stats.items():
+                    st.write(f"### {namespace} namespace")
+                    if stat:
+                        st.write(f"- 総ドキュメント数: {stat.get('total_vector_count', 0)}")
+                        st.write(f"- 次元数: {stat.get('dimension', 0)}")
+                        st.write(f"- インデックス名: {stat.get('index_full_name', 'N/A')}")
+                    else:
+                        st.write("統計情報が取得できませんでした。")
+                
+                # インデックスの統計情報を取得
+                stats = pinecone_service.get_index_stats()
+                
+                st.markdown("#### 📊 データベースの概要")
+                st.json(stats)
+                
+                # データを取得
+                data = pinecone_service.get_index_data()
+                
+                if data:
+                    st.markdown("#### 📋 データベースの内容")
+                    # データフレームを作成
+                    df = pd.DataFrame(data)
+                    
+                    # ファイルごとにグループ化して集計
+                    df_grouped = df.groupby('filename').agg({
+                        'chunk_id': 'count',
+                        'main_category': 'first',
+                        'sub_category': 'first',
+                        'city': 'first',
+                        'created_date': 'first',
+                        'upload_date': 'first',
+                        'source': 'first'
+                    }).reset_index()
+                    
+                    # 列名の日本語対応
+                    column_names = {
+                        'filename': 'ファイル名',
+                        'chunk_id': 'チャンク数',
+                        'main_category': '大カテゴリ',
+                        'sub_category': '中カテゴリ',
+                        'city': '市区町村',
+                        'created_date': 'データ作成日',
+                        'upload_date': 'アップロード日',
+                        'source': 'ソース元'
+                    }
+                    
+                    # 列名を日本語に変換
+                    df_grouped = df_grouped.rename(columns=column_names)
+                    
+                    # データフレームを表示
+                    st.dataframe(
+                        df_grouped,
+                        hide_index=True,
+                        use_container_width=True
+                    )
+                else:
+                    st.info("ℹ️ データベースにデータがありません。")
+                    
+            except Exception as e:
+                st.error(f"❌ データベースの状態取得に失敗しました: {str(e)}")
+                st.error(f"🔍 エラーの詳細: {type(e).__name__}")
+                st.error(f"📜 スタックトレース:\n{traceback.format_exc()}")
 
     # 設定の保存ボタン
     st.markdown("---")
