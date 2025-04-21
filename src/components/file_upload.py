@@ -76,21 +76,24 @@ def render_file_upload(pinecone_service: PineconeService):
         # 大カテゴリの選択
         main_category = st.selectbox(
             "大カテゴリ",
-            ["法令", "条例", "要綱", "その他"],
+            METADATA_CATEGORIES["大カテゴリ"],
             help="ファイルの大カテゴリを選択してください"
         )
         
         # 中カテゴリの選択（複数選択可能）
-        sub_categories = st.multiselect(
-            "中カテゴリ",
-            ["建築", "都市計画", "景観", "環境", "防災", "その他"],
-            help="ファイルの中カテゴリを選択してください（複数選択可）"
-        )
+        if main_category:
+            sub_categories = st.multiselect(
+                "中カテゴリ",
+                METADATA_CATEGORIES["中カテゴリ"][main_category],
+                help="ファイルの中カテゴリを選択してください（複数選択可）"
+            )
+        else:
+            sub_categories = []
         
         # 市区町村の選択
         city = st.selectbox(
             "市区町村",
-            ["川越市", "さいたま市", "その他"],
+            METADATA_CATEGORIES["市区町村"],
             help="ファイルに関連する市区町村を選択してください"
         )
         
