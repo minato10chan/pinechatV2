@@ -77,6 +77,8 @@ def render_file_upload(pinecone_service: PineconeService):
         main_category = st.selectbox(
             "大カテゴリ",
             METADATA_CATEGORIES["大カテゴリ"],
+            index=None,
+            placeholder="大カテゴリを選択してください",
             help="ファイルの大カテゴリを選択してください"
         )
         
@@ -85,10 +87,11 @@ def render_file_upload(pinecone_service: PineconeService):
             sub_categories = st.multiselect(
                 "中カテゴリ",
                 METADATA_CATEGORIES["中カテゴリ"][main_category],
-                help="ファイルの中カテゴリを選択してください（複数選択可）"
+                help=f"{main_category}に関連する中カテゴリを選択してください（複数選択可）"
             )
         else:
             sub_categories = []
+            st.info("ℹ️ 中カテゴリを選択するには、まず大カテゴリを選択してください。")
         
         # 市区町村の選択
         city = st.selectbox(
