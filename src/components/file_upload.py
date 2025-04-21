@@ -58,7 +58,7 @@ def render_file_upload(pinecone_service: PineconeService):
     st.title("ファイルアップロード")
     st.write("テキストファイルをアップロードして、Pineconeデータベースに保存します。")
     
-    uploaded_file = st.file_uploader("テキストファイルをアップロード", type=['txt'])
+    uploaded_file = st.file_uploader("テキストファイルをアップロード", type=['txt', 'csv'])
     
     if uploaded_file is not None:
         # メタデータ入力フォーム
@@ -115,8 +115,14 @@ def render_file_upload(pinecone_service: PineconeService):
                 
             try:
                 with st.spinner("ファイルを処理中..."):
-                    file_content = read_file_content(uploaded_file)
-                    chunks = process_text_file(file_content, uploaded_file.name)
+                    # ファイルの種類に応じて処理を分岐
+                    file_extension = uploaded_file.name.split('.')[-1].lower()
+                    if file_extension == 'csv':
+                        chunks = process_csv_file(uploaded_file)
+                    else:
+                        file_content = read_file_content(uploaded_file)
+                        chunks = process_text_file(file_content, uploaded_file.name)
+                    
                     st.write(f"ファイルを{len(chunks)}個のチャンクに分割しました")
                     
                     # メタデータを追加
