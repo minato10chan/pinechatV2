@@ -109,7 +109,7 @@ class PineconeService:
                 else:
                     raise Exception(f"埋め込みベクトルの生成に失敗しました（最大試行回数到達）: {str(e)}")
 
-    def upload_chunks(self, chunks: List[Dict[str, Any]], batch_size: int = BATCH_SIZE) -> None:
+    def upload_chunks(self, chunks: List[Dict[str, Any]], namespace: str = None, batch_size: int = BATCH_SIZE) -> None:
         """チャンクをPineconeにアップロード"""
         if not chunks:
             print("アップロードするチャンクがありません")
@@ -163,9 +163,9 @@ class PineconeService:
                     
                     for attempt in range(max_retries):
                         try:
-                            # バッチをアップロード
+                            # バッチをアップロード（namespaceを指定）
                             print(f"  {len(vectors)}件のベクトルをアップロード中...")
-                            self.index.upsert(vectors=vectors)
+                            self.index.upsert(vectors=vectors, namespace=namespace)
                             print(f"  バッチ {batch_num} のアップロードが完了しました")
                             break
                         except Exception as e:
@@ -180,14 +180,14 @@ class PineconeService:
                 # 失敗したチャンクを再試行
                 if retry_chunks:
                     print(f"\n失敗したチャンク {len(retry_chunks)}件 を再試行します...")
-                    self.upload_chunks(retry_chunks, batch_size)
+                    self.upload_chunks(retry_chunks, namespace, batch_size)
             
             print("\nアップロード完了")
             
         except Exception as e:
             raise Exception(f"チャンクのアップロードに失敗しました: {str(e)}")
 
-    def query(self, query_text: str, top_k: int = DEFAULT_TOP_K, similarity_threshold: float = SIMILARITY_THRESHOLD) -> Dict[str, Any]:
+    def query(self, query_text: str, namespace: str = None, top_k: int = DEFAULT_TOP_K, similarity_threshold: float = SIMILARITY_THRESHOLD) -> Dict[str, Any]:
         """クエリに基づいて類似チャンクを検索"""
         max_retries = 3
         retry_delay = 1
@@ -204,7 +204,8 @@ class PineconeService:
                 results = self.index.query(
                     vector=query_vector,
                     top_k=top_k * 2,  # フィルタリング用に2倍取得
-                    include_metadata=True
+                    include_metadata=True,
+                    namespace=namespace  # namespaceを指定
                 )
                 
                 print(f"取得した候補数: {len(results.matches)}")
@@ -243,121 +244,51 @@ class PineconeService:
                 else:
                     raise Exception(f"検索クエリの実行に失敗しました（最大試行回数到達）: {str(e)}")
 
-    def get_index_stats(self) -> Dict[str, Any]:
+    def get_index_stats(self, namespace: str = None) -> Dict[str, Any]:
         """インデックスの統計情報を取得"""
         max_retries = 3
         retry_delay = 1
         
         for attempt in range(max_retries):
             try:
-                stats = self.index.describe_index_stats()
+                stats = self.index.describe_index_stats(namespace=namespace)
                 return {
                     "total_vector_count": stats.total_vector_count,
-                    "dimension": stats.dimension,
-                    "index_name": PINECONE_INDEX_NAME,
-                    "metric": "cosine"
+                    "namespaces": stats.namespaces
                 }
             except Exception as e:
                 if attempt < max_retries - 1:
-                    print(f"インデックスの統計情報の取得に失敗しました（試行 {attempt + 1}/{max_retries}）: {str(e)}")
+                    print(f"統計情報の取得に失敗しました（試行 {attempt + 1}/{max_retries}）: {str(e)}")
                     print(f"{retry_delay}秒後に再試行します...")
                     time.sleep(retry_delay)
                     retry_delay *= 2
                 else:
-                    raise Exception(f"インデックスの統計情報の取得に失敗しました（最大試行回数到達）: {str(e)}")
+                    raise Exception(f"統計情報の取得に失敗しました（最大試行回数到達）: {str(e)}")
 
-    def clear_index(self) -> None:
+    def clear_index(self, namespace: str = None) -> None:
         """インデックスをクリア"""
-        max_retries = 3
-        retry_delay = 2
-        
-        for attempt in range(max_retries):
-            try:
-                self.index.delete(delete_all=True)
-                print("インデックスをクリアしました")
-                return
-            except Exception as e:
-                if attempt < max_retries - 1:
-                    print(f"インデックスのクリアに失敗しました（試行 {attempt + 1}/{max_retries}）: {str(e)}")
-                    print(f"{retry_delay}秒後に再試行します...")
-                    time.sleep(retry_delay)
-                    retry_delay *= 2
-                else:
-                    raise Exception(f"インデックスのクリアに失敗しました（最大試行回数到達）: {str(e)}")
+        try:
+            self.index.delete(delete_all=True, namespace=namespace)
+            print(f"インデックスをクリアしました（namespace: {namespace if namespace else 'default'}）")
+        except Exception as e:
+            raise Exception(f"インデックスのクリアに失敗しました: {str(e)}")
 
-    def get_index_data(self, top_k: int = 1000) -> List[Dict]:
+    def get_index_data(self, namespace: str = None, top_k: int = 1000) -> List[Dict]:
         """インデックスのデータを取得"""
         try:
-            print(f"データ取得開始: top_k={top_k}")
-            
-            # インデックスの統計情報を取得
-            stats = self.index.describe_index_stats()
-            total_vectors = stats.total_vector_count
-            print(f"インデックスの総ベクトル数: {total_vectors}")
-            
-            if total_vectors == 0:
-                print("インデックスにデータが存在しません")
-                return []
-            
-            # 空のベクトルでクエリを実行して全データを取得
-            query_results = self.index.query(
-                vector=[0.0] * self.dimension,
-                top_k=min(top_k, total_vectors),
-                include_metadata=True
+            results = self.index.query(
+                vector=[0] * self.dimension,  # ダミーベクトル
+                top_k=top_k,
+                include_metadata=True,
+                namespace=namespace
             )
-            
-            print(f"クエリ結果: {len(query_results.matches)}件のマッチ")
-            
-            # 結果を整形
-            results = []
-            for i, match in enumerate(query_results.matches, 1):
-                print(f"\nマッチ {i}/{len(query_results.matches)}:")
-                print(f"  ID: {match.id}")
-                print(f"  スコア: {match.score}")
-                print(f"  メタデータ: {match.metadata}")
-                
-                # メタデータが存在する場合はそのまま使用
-                if match.metadata:
-                    result = {
-                        "ID": match.id,
-                        "score": match.score,
-                        "text": match.metadata.get("text", ""),
-                        "filename": match.metadata.get("filename", ""),
-                        "chunk_id": match.metadata.get("chunk_id", ""),
-                        "main_category": match.metadata.get("main_category", ""),
-                        "sub_category": match.metadata.get("sub_category", ""),
-                        "city": match.metadata.get("city", ""),
-                        "created_date": match.metadata.get("created_date", ""),
-                        "upload_date": match.metadata.get("upload_date", ""),
-                        "source": match.metadata.get("source", "")
-                    }
-                else:
-                    # メタデータが存在しない場合は空の値を設定
-                    result = {
-                        "ID": match.id,
-                        "score": match.score,
-                        "text": "",
-                        "filename": "",
-                        "chunk_id": "",
-                        "main_category": "",
-                        "sub_category": "",
-                        "city": "",
-                        "created_date": "",
-                        "upload_date": "",
-                        "source": ""
-                    }
-                
-                results.append(result)
-            
-            print(f"\n取得したデータ数: {len(results)}")
-            if results:
-                print("最初のデータの例:")
-                print(json.dumps(results[0], indent=2, ensure_ascii=False))
-            
-            return results
+            return [
+                {
+                    "id": match.id,
+                    "score": match.score,
+                    "metadata": match.metadata
+                }
+                for match in results.matches
+            ]
         except Exception as e:
-            print(f"データベースの状態取得に失敗しました: {str(e)}")
-            print(f"エラーの詳細: {type(e).__name__}")
-            import traceback
-            print(f"スタックトレース:\n{traceback.format_exc()}")
-            return [] 
+            raise Exception(f"インデックスデータの取得に失敗しました: {str(e)}") 

@@ -7,6 +7,7 @@ from src.components.file_upload import render_file_upload
 from src.components.chat import render_chat
 from src.components.settings import render_settings
 from src.components.agent import render_agent
+from src.components.property_upload import render_property_upload
 from src.config.settings import DEFAULT_SYSTEM_PROMPT, DEFAULT_RESPONSE_TEMPLATE
 
 # セッション状態の初期化
@@ -25,7 +26,7 @@ try:
     # インデックスの状態を確認
     stats = pinecone_service.get_index_stats()
     if stats['total_vector_count'] == 0:
-        st.info("データベースは空です。ファイルをアップロードしてデータを追加してください。")
+        st.info("データベースは空です。物件情報を登録してください。")
     else:
         st.write(f"データベースの状態: {stats['total_vector_count']}件のドキュメント")
 except Exception as e:
@@ -60,16 +61,18 @@ def main():
         st.title("管理者メニュー")
         page = st.radio(
             "機能を選択",
-            ["チャット", "ファイルアップロード", "設定", "Agent"],
+            ["チャット", "物件情報登録", "ファイルアップロード", "設定", "Agent"],
             index={
                 "chat": 0,
-                "upload": 1,
-                "settings": 2,
-                "agent": 3
+                "property": 1,
+                "upload": 2,
+                "settings": 3,
+                "agent": 4
             }[st.session_state.current_page]
         )
         st.session_state.current_page = {
             "チャット": "chat",
+            "物件情報登録": "property",
             "ファイルアップロード": "upload",
             "設定": "settings",
             "Agent": "agent"
@@ -78,6 +81,8 @@ def main():
     # メインコンテンツの表示
     if st.session_state.current_page == "chat":
         render_chat(pinecone_service)
+    elif st.session_state.current_page == "property":
+        render_property_upload(pinecone_service)
     elif st.session_state.current_page == "upload":
         render_file_upload(pinecone_service)
     elif st.session_state.current_page == "agent":
