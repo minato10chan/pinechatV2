@@ -84,14 +84,22 @@ class LangChainService:
         system_prompt = system_prompt or self.system_prompt
         response_template = response_template or self.response_template
         
-        # プロンプトテンプレートの設定
-        prompt = ChatPromptTemplate.from_messages([
+        # メッセージリストの作成
+        messages = [
             ("system", system_prompt),
             MessagesPlaceholder(variable_name="chat_history"),
-            ("system", "参照文脈:\n{context}"),
-            ("system", "物件情報:\n{property_info}") if property_info else None,
-            ("human", "{input}")
-        ])
+            ("system", "参照文脈:\n{context}")
+        ]
+        
+        # 物件情報がある場合は追加
+        if property_info:
+            messages.append(("system", "物件情報:\n{property_info}"))
+        
+        # ユーザー入力の追加
+        messages.append(("human", "{input}"))
+        
+        # プロンプトテンプレートの設定
+        prompt = ChatPromptTemplate.from_messages(messages)
         
         # チェーンの初期化
         chain = prompt | self.llm
