@@ -273,6 +273,8 @@ def render_settings(pinecone_service: PineconeService):
                                         'latitude',
                                         'longitude'
                                     ]
+                                    # 物件情報の件数を表示
+                                    st.markdown(f"##### 📊 物件情報の件数: {len(metadata_list)}件")
                                 else:
                                     # デフォルトnamespaceの表示
                                     display_columns = [
