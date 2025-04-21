@@ -220,48 +220,62 @@ def render_settings(pinecone_service: PineconeService):
                 st.markdown("#### 📊 データベースの概要")
                 st.json(stats)
                 
-                # データを取得
-                data = pinecone_service.get_index_data()
-                
-                if data:
-                    st.markdown("#### 📋 データベースの内容")
-                    # データフレームを作成
-                    df = pd.DataFrame(data)
-                    
-                    # ファイルごとにグループ化して集計
-                    df_grouped = df.groupby('filename').agg({
-                        'chunk_id': 'count',
-                        'main_category': 'first',
-                        'sub_category': 'first',
-                        'city': 'first',
-                        'created_date': 'first',
-                        'upload_date': 'first',
-                        'source': 'first'
-                    }).reset_index()
-                    
-                    # 列名の日本語対応
-                    column_names = {
-                        'filename': 'ファイル名',
-                        'chunk_id': 'チャンク数',
-                        'main_category': '大カテゴリ',
-                        'sub_category': '中カテゴリ',
-                        'city': '市区町村',
-                        'created_date': 'データ作成日',
-                        'upload_date': 'アップロード日',
-                        'source': 'ソース元'
-                    }
-                    
-                    # 列名を日本語に変換
-                    df_grouped = df_grouped.rename(columns=column_names)
-                    
-                    # データフレームを表示
-                    st.dataframe(
-                        df_grouped,
-                        hide_index=True,
-                        use_container_width=True
-                    )
-                else:
-                    st.info("ℹ️ データベースにデータがありません。")
+                # 各namespaceのデータを取得して表示
+                for namespace in namespaces:
+                    try:
+                        vectors = pinecone_service.list_vectors(namespace=namespace)
+                        if vectors:
+                            st.markdown(f"#### 📋 {namespace} namespaceの内容")
+                            
+                            # メタデータをDataFrameに変換
+                            metadata_list = []
+                            for vector in vectors:
+                                if 'metadata' in vector:
+                                    metadata = vector['metadata']
+                                    metadata['namespace'] = namespace
+                                    metadata_list.append(metadata)
+                            
+                            if metadata_list:
+                                df = pd.DataFrame(metadata_list)
+                                
+                                # namespaceごとに適切な列を表示
+                                if namespace == "property":
+                                    # 物件情報の表示
+                                    display_columns = [
+                                        'property_name',
+                                        'property_type',
+                                        'prefecture',
+                                        'city',
+                                        'detailed_address',
+                                        'latitude',
+                                        'longitude'
+                                    ]
+                                else:
+                                    # デフォルトnamespaceの表示
+                                    display_columns = [
+                                        'main_category',
+                                        'sub_category',
+                                        'city',
+                                        'created_date',
+                                        'upload_date',
+                                        'source'
+                                    ]
+                                
+                                # 存在する列のみを表示
+                                available_columns = [col for col in display_columns if col in df.columns]
+                                if available_columns:
+                                    st.dataframe(
+                                        df[available_columns],
+                                        hide_index=True,
+                                        use_container_width=True
+                                    )
+                                else:
+                                    st.info(f"{namespace} namespaceに表示可能なデータがありません。")
+                            else:
+                                st.info(f"{namespace} namespaceにデータがありません。")
+                    except Exception as e:
+                        st.error(f"{namespace} namespaceのデータ取得に失敗しました: {str(e)}")
+                        continue
                     
             except Exception as e:
                 st.error(f"❌ データベースの状態取得に失敗しました: {str(e)}")
