@@ -275,6 +275,16 @@ def render_settings(pinecone_service: PineconeService):
                                     ]
                                     # 物件情報の件数を表示
                                     st.markdown(f"##### 📊 物件情報の件数: {len(metadata_list)}件")
+                                    
+                                    # 市区町村ごとの件数を表示
+                                    city_counts = df['city'].value_counts().reset_index()
+                                    city_counts.columns = ['市区町村', '件数']
+                                    st.markdown("##### 📍 市区町村別物件数")
+                                    st.dataframe(
+                                        city_counts,
+                                        hide_index=True,
+                                        use_container_width=True
+                                    )
                                 else:
                                     # デフォルトnamespaceの表示
                                     display_columns = [
