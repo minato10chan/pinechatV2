@@ -56,11 +56,12 @@ def process_csv_file(file):
         
         # 各列を結合してテキストを作成
         chunks = []
-        for _, row in df.iterrows():
+        for index, row in df.iterrows():
             # 各行をテキストに変換
             text = " ".join([str(val) for val in row.values if pd.notna(val)])
             if text.strip():
                 chunks.append({
+                    "id": f"csv_{index}_{datetime.now().strftime('%Y%m%d%H%M%S')}",
                     "text": text,
                     "metadata": {
                         "row_data": row.to_dict()
