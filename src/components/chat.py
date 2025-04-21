@@ -71,8 +71,8 @@ def get_property_info(property_id: str, pinecone_service: PineconeService) -> st
         if not result:
             return "物件情報が見つかりませんでした。"
             
-        # テキストをそのまま表示
-        return result.text
+        # テキストを取得
+        return result.get("text", "物件情報が見つかりませんでした。")
     except Exception as e:
         return f"物件情報の取得中にエラーが発生しました: {str(e)}"
 
