@@ -15,16 +15,22 @@ def render_property_upload(pinecone_service: PineconeService):
         "物件種別",
         ["マンション", "アパート", "一戸建て", "土地", "その他"]
     )
-    city = st.text_input("所在地", placeholder="都道府県・市区町村を入力してください")
+    
+    # 都道府県と市区町村を分けて入力
+    col1, col2 = st.columns(2)
+    with col1:
+        prefecture = st.text_input("都道府県", placeholder="例：埼玉県")
+    with col2:
+        city = st.text_input("市区町村", placeholder="例：川越市")
+    
     layout = st.selectbox(
         "間取り",
         ["1K", "1DK", "1LDK", "2K", "2DK", "2LDK", "3K", "3DK", "3LDK", "4K以上", "その他"]
     )
-    price = st.number_input("価格（万円）", min_value=0, step=100)
     
     # アップロードボタン
     if st.button("アップロード"):
-        if not all([property_name, property_type, city, layout, price]):
+        if not all([property_name, property_type, prefecture, city, layout]):
             st.warning("すべての項目を入力してください。")
             return
         
@@ -33,14 +39,15 @@ def render_property_upload(pinecone_service: PineconeService):
             property_data = {
                 "property_name": property_name,
                 "property_type": property_type,
+                "prefecture": prefecture,
                 "city": city,
-                "layout": layout,
-                "price": f"{price}万円"
+                "layout": layout
             }
             
             # テキストチャンクの作成
-            text = f"{property_name}は{property_type}です。{city}に位置し、間取りは{layout}、価格は{price}万円です。"
+            text = f"{property_name}は{property_type}です。{prefecture}{city}に位置し、間取りは{layout}です。"
             chunks = [{
+                "id": f"property_{datetime.now().strftime('%Y%m%d%H%M%S')}",
                 "text": text,
                 "metadata": property_data
             }]

@@ -11,11 +11,20 @@ def read_file_content(file) -> str:
     
     for encoding in encodings:
         try:
-            return content.decode(encoding)
-        except UnicodeDecodeError:
+            # バイト列を文字列にデコード
+            decoded_content = content.decode(encoding)
+            # デコードした文字列を再度エンコードして元のバイト列と比較
+            if decoded_content.encode(encoding) == content:
+                return decoded_content
+        except (UnicodeDecodeError, UnicodeEncodeError):
             continue
     
-    raise ValueError("ファイルのエンコーディングを特定できませんでした。UTF-8、Shift-JIS、CP932、EUC-JPのいずれかで保存されているファイルをアップロードしてください。")
+    # すべてのエンコーディングで失敗した場合
+    try:
+        # UTF-8で強制的にデコードを試みる（一部の文字が化ける可能性あり）
+        return content.decode('utf-8', errors='replace')
+    except Exception as e:
+        raise ValueError(f"ファイルのエンコーディングを特定できませんでした。エラー: {str(e)}")
 
 def render_file_upload(pinecone_service: PineconeService):
     """ファイルアップロード機能のUIを表示"""
