@@ -33,8 +33,26 @@ def read_file_content(file) -> str:
 def process_csv_file(file):
     """CSVファイルを処理してチャンクに分割"""
     try:
-        # CSVファイルを読み込む
-        df = pd.read_csv(file)
+        # エンコーディングのリスト（日本語のCSVで一般的なエンコーディング）
+        encodings = ['utf-8', 'shift-jis', 'cp932', 'euc-jp']
+        
+        # 各エンコーディングで試行
+        for encoding in encodings:
+            try:
+                # ファイルの内容をバイト列として読み込む
+                content = file.getvalue()
+                # 指定したエンコーディングでデコード
+                decoded_content = content.decode(encoding)
+                # デコードした内容をStringIOに変換
+                file_like = io.StringIO(decoded_content)
+                # CSVとして読み込む
+                df = pd.read_csv(file_like)
+                break  # 成功したらループを抜ける
+            except (UnicodeDecodeError, pd.errors.EmptyDataError):
+                continue  # 失敗したら次のエンコーディングを試す
+        
+        if 'df' not in locals():
+            raise ValueError("CSVファイルのエンコーディングを特定できませんでした。")
         
         # 各列を結合してテキストを作成
         chunks = []
