@@ -1,68 +1,134 @@
 import streamlit as st
 from src.services.pinecone_service import PineconeService
-from src.utils.text_processing import process_text_file
-from datetime import datetime
+import pandas as pd
 import json
+import traceback
+
+# 都道府県と市区町村のデータ
+PREFECTURES = [
+    "埼玉県", "千葉県", "東京都", "神奈川県"
+]
+
+# 主要な市区町村のデータ（例として東京都の区を記載）
+CITIES = {
+    "埼玉県": [
+        "川越市", "さいたま市"
+    ],
+    # 他の都道府県の市区町村も同様に追加可能
+}
 
 def render_property_upload(pinecone_service: PineconeService):
-    """物件情報アップロード機能のUIを表示"""
-    st.title("物件情報アップロード")
-    st.write("物件情報をアップロードします。")
+    """物件情報のアップロードUIを表示"""
+    st.title("🏠 物件情報のアップロード")
     
-    # 物件情報の入力フォーム
-    property_name = st.text_input("物件名", placeholder="物件名を入力してください")
-    property_type = st.selectbox(
-        "物件種別",
-        ["マンション", "アパート", "一戸建て", "土地", "その他"]
-    )
-    
-    # 都道府県と市区町村を分けて入力
-    col1, col2 = st.columns(2)
-    with col1:
-        prefecture = st.text_input("都道府県", placeholder="例：埼玉県")
-    with col2:
-        city = st.text_input("市区町村", placeholder="例：川越市")
-    
-    # 詳細な住所
-    detailed_address = st.text_input("市区町村以下の住所", placeholder="例：大字南大塚123-4")
-    
-    # 緯度経度
-    col3, col4 = st.columns(2)
-    with col3:
-        latitude = st.number_input("緯度", format="%.6f", step=0.000001)
-    with col4:
-        longitude = st.number_input("経度", format="%.6f", step=0.000001)
-    
-    # アップロードボタン
-    if st.button("アップロード"):
-        if not all([property_name, property_type, prefecture, city, detailed_address, latitude, longitude]):
-            st.warning("すべての項目を入力してください。")
-            return
+    with st.form("property_upload_form"):
+        st.markdown("### 物件情報の入力")
         
-        try:
-            # 物件情報の構造化
-            property_data = {
-                "property_name": property_name,
-                "property_type": property_type,
-                "prefecture": prefecture,
-                "city": city,
-                "detailed_address": detailed_address,
-                "latitude": latitude,
-                "longitude": longitude
-            }
-            
-            # テキストチャンクの作成
-            text = f"{property_name}は{property_type}です。{prefecture}{city}{detailed_address}に位置し、緯度{latitude}、経度{longitude}です。"
-            chunks = [{
-                "id": f"property_{datetime.now().strftime('%Y%m%d%H%M%S')}",
-                "text": text,
-                "metadata": property_data
-            }]
-            
-            # Pineconeへのアップロード（property namespaceを使用）
-            with st.spinner("アップロード中..."):
-                pinecone_service.upload_chunks(chunks, namespace="property")
-                st.success("物件情報のアップロードが完了しました。")
+        # 物件名
+        property_name = st.text_input("物件名", help="物件の名称を入力してください")
+        
+        # 物件種別
+        property_type = st.selectbox(
+            "物件種別",
+            ["一戸建て", "土地"],
+            help="物件の種別を選択してください"
+        )
+        
+        # 都道府県と市区町村の選択
+        col1, col2 = st.columns(2)
+        with col1:
+            prefecture = st.selectbox(
+                "都道府県",
+                PREFECTURES,
+                help="物件の所在地の都道府県を選択してください"
+            )
+        
+        with col2:
+            # 選択された都道府県に基づいて市区町村のリストを表示
+            cities = CITIES.get(prefecture, [])
+            city = st.selectbox(
+                "市区町村",
+                cities,
+                help="物件の所在地の市区町村を選択してください"
+            )
+        
+        # 詳細住所
+        detailed_address = st.text_input("詳細住所", help="物件の詳細な住所を入力してください")
+        
+        # 緯度・経度
+        col3, col4 = st.columns(2)
+        with col3:
+            latitude = st.number_input(
+                "緯度",
+                min_value=-90.0,
+                max_value=90.0,
+                value=0.0,
+                format="%.6f",
+                help="物件の緯度を入力してください"
+            )
+        with col4:
+            longitude = st.number_input(
+                "経度",
+                min_value=-180.0,
+                max_value=180.0,
+                value=0.0,
+                format="%.6f",
+                help="物件の経度を入力してください"
+            )
+        
+        # 物件の詳細情報
+        property_details = st.text_area(
+            "物件の詳細情報",
+            help="物件の詳細な情報を入力してください"
+        )
+        
+        # 追加資料
+        additional_materials = st.file_uploader(
+            "追加資料",
+            type=["pdf", "doc", "docx", "xls", "xlsx", "jpg", "jpeg", "png"],
+            accept_multiple_files=True,
+            help="物件に関連する追加資料をアップロードしてください"
+        )
+        
+        # アップロードボタン
+        submit_button = st.form_submit_button("アップロード")
+        
+        if submit_button:
+            try:
+                # 必須項目のチェック
+                if not all([property_name, property_type, prefecture, city]):
+                    st.error("❌ 必須項目（物件名、物件種別、都道府県、市区町村）を入力してください")
+                    return
                 
-        except Exception as e:
-            st.error(f"アップロード中にエラーが発生しました: {str(e)}") 
+                # 物件情報の構造化
+                property_data = {
+                    "property_name": property_name,
+                    "property_type": property_type,
+                    "prefecture": prefecture,
+                    "city": city,
+                    "detailed_address": detailed_address,
+                    "latitude": latitude,
+                    "longitude": longitude,
+                    "property_details": property_details
+                }
+                
+                # 追加資料の処理
+                if additional_materials:
+                    # ここで追加資料の処理を実装
+                    pass
+                
+                # Pineconeへのアップロード
+                chunks = [{
+                    "text": json.dumps(property_data, ensure_ascii=False),
+                    "metadata": property_data
+                }]
+                
+                # property namespaceを使用してアップロード
+                pinecone_service.upload_chunks(chunks, namespace="property")
+                
+                st.success("✅ 物件情報をアップロードしました")
+                
+            except Exception as e:
+                st.error(f"❌ アップロードに失敗しました: {str(e)}")
+                st.error(f"🔍 エラーの詳細: {type(e).__name__}")
+                st.error(f"📜 スタックトレース:\n{traceback.format_exc()}") 
