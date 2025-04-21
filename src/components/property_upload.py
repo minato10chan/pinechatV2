@@ -23,14 +23,19 @@ def render_property_upload(pinecone_service: PineconeService):
     with col2:
         city = st.text_input("市区町村", placeholder="例：川越市")
     
-    layout = st.selectbox(
-        "間取り",
-        ["1K", "1DK", "1LDK", "2K", "2DK", "2LDK", "3K", "3DK", "3LDK", "4K以上", "その他"]
-    )
+    # 詳細な住所
+    detailed_address = st.text_input("市区町村以下の住所", placeholder="例：大字南大塚123-4")
+    
+    # 緯度経度
+    col3, col4 = st.columns(2)
+    with col3:
+        latitude = st.number_input("緯度", format="%.6f", step=0.000001)
+    with col4:
+        longitude = st.number_input("経度", format="%.6f", step=0.000001)
     
     # アップロードボタン
     if st.button("アップロード"):
-        if not all([property_name, property_type, prefecture, city, layout]):
+        if not all([property_name, property_type, prefecture, city, detailed_address, latitude, longitude]):
             st.warning("すべての項目を入力してください。")
             return
         
@@ -41,11 +46,13 @@ def render_property_upload(pinecone_service: PineconeService):
                 "property_type": property_type,
                 "prefecture": prefecture,
                 "city": city,
-                "layout": layout
+                "detailed_address": detailed_address,
+                "latitude": latitude,
+                "longitude": longitude
             }
             
             # テキストチャンクの作成
-            text = f"{property_name}は{property_type}です。{prefecture}{city}に位置し、間取りは{layout}です。"
+            text = f"{property_name}は{property_type}です。{prefecture}{city}{detailed_address}に位置し、緯度{latitude}、経度{longitude}です。"
             chunks = [{
                 "id": f"property_{datetime.now().strftime('%Y%m%d%H%M%S')}",
                 "text": text,
