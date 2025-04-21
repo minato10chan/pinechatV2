@@ -31,31 +31,48 @@ def load_chat_history(file):
     data = json.load(file)
     return data.get("messages", [])
 
-def get_property_info(query: str, pinecone_service: PineconeService) -> str:
-    """物件情報を検索して返す"""
+def get_property_list(pinecone_service: PineconeService) -> list:
+    """物件情報の一覧を取得"""
     try:
-        # Pineconeから物件情報を検索
-        results = pinecone_service.query(
-            query=query,
-            top_k=3,
-            namespace="property"
-        )
+        # Pineconeから物件情報の一覧を取得
+        results = pinecone_service.list_all(namespace="property")
         
         if not results:
+            return []
+            
+        properties = []
+        for match in results:
+            # テキストから物件情報を抽出
+            text = match.text
+            lines = text.split('\n')
+            
+            # 物件名と場所を抽出（最初の2行を想定）
+            name = lines[0].strip() if len(lines) > 0 else "不明"
+            location = lines[1].strip() if len(lines) > 1 else "不明"
+            
+            properties.append({
+                "id": match.id,
+                "name": name,
+                "location": location,
+                "text": text
+            })
+            
+        return properties
+    except Exception as e:
+        st.error(f"物件情報の取得中にエラーが発生しました: {str(e)}")
+        return []
+
+def get_property_info(property_id: str, pinecone_service: PineconeService) -> str:
+    """選択された物件の詳細情報を取得"""
+    try:
+        # Pineconeから物件情報を取得
+        result = pinecone_service.get_by_id(property_id, namespace="property")
+        
+        if not result:
             return "物件情報が見つかりませんでした。"
             
-        property_info = []
-        for match in results:
-            metadata = match.metadata
-            info = f"""
-物件名: {metadata.get('name', '不明')}
-場所: {metadata.get('location', '不明')}
-タイプ: {metadata.get('type', '不明')}
-詳細: {metadata.get('details', '不明')}
-"""
-            property_info.append(info)
-            
-        return "\n".join(property_info)
+        # テキストをそのまま表示
+        return result.text
     except Exception as e:
         return f"物件情報の取得中にエラーが発生しました: {str(e)}"
 
@@ -86,20 +103,29 @@ def render_chat(pinecone_service: PineconeService):
         
         # 物件情報の選択
         st.header("物件情報")
-        property_selection = st.selectbox(
-            "物件情報の参照方法を選択",
-            options=["全ての物件", "特定の物件を検索"],
-            index=0
-        )
+        properties = get_property_list(pinecone_service)
         
-        if property_selection == "特定の物件を検索":
-            search_query = st.text_input("物件検索キーワード（物件名、場所、特徴など）")
-            if search_query:
-                st.session_state.property_info = get_property_info(search_query, pinecone_service)
-            else:
-                st.session_state.property_info = "物件情報が見つかりませんでした。"
+        if properties:
+            # 物件の選択肢を作成（物件名と場所を表示）
+            property_options = [f"{p['name']} - {p['location']}" for p in properties]
+            selected_property = st.selectbox(
+                "物件を選択",
+                options=property_options,
+                index=0
+            )
+            
+            # 選択された物件のIDを取得
+            selected_property_id = properties[property_options.index(selected_property)]["id"]
+            
+            # 選択された物件の詳細情報を取得
+            st.session_state.property_info = get_property_info(selected_property_id, pinecone_service)
+            
+            # 物件の詳細情報を表示
+            with st.expander("選択中の物件情報"):
+                st.markdown(st.session_state.property_info)
         else:
-            st.session_state.property_info = "全ての物件情報を参照します。"
+            st.warning("物件情報が登録されていません。")
+            st.session_state.property_info = "物件情報が登録されていません。"
         
         # 選択されたテンプレートの内容を表示
         selected_template_data = next(
