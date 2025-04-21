@@ -220,6 +220,49 @@ def render_settings(pinecone_service: PineconeService):
                 st.markdown("#### 📊 データベースの概要")
                 st.json(stats)
                 
+                # データを取得
+                data = pinecone_service.get_index_data()
+                
+                if data:
+                    st.markdown("#### 📋 データベースの内容")
+                    # データフレームを作成
+                    df = pd.DataFrame(data)
+                    
+                    # ファイルごとにグループ化して集計
+                    df_grouped = df.groupby('filename').agg({
+                        'chunk_id': 'count',
+                        'main_category': 'first',
+                        'sub_category': 'first',
+                        'city': 'first',
+                        'created_date': 'first',
+                        'upload_date': 'first',
+                        'source': 'first'
+                    }).reset_index()
+                    
+                    # 列名の日本語対応
+                    column_names = {
+                        'filename': 'ファイル名',
+                        'chunk_id': 'チャンク数',
+                        'main_category': '大カテゴリ',
+                        'sub_category': '中カテゴリ',
+                        'city': '市区町村',
+                        'created_date': 'データ作成日',
+                        'upload_date': 'アップロード日',
+                        'source': 'ソース元'
+                    }
+                    
+                    # 列名を日本語に変換
+                    df_grouped = df_grouped.rename(columns=column_names)
+                    
+                    # データフレームを表示
+                    st.dataframe(
+                        df_grouped,
+                        hide_index=True,
+                        use_container_width=True
+                    )
+                else:
+                    st.info("ℹ️ データベースにデータがありません。")
+                
                 # 各namespaceのデータを取得して表示
                 for namespace in namespaces:
                     try:
