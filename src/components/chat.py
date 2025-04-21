@@ -35,7 +35,7 @@ def get_property_list(pinecone_service: PineconeService) -> list:
     """物件情報の一覧を取得"""
     try:
         # Pineconeから物件情報の一覧を取得
-        results = pinecone_service.list_all(namespace="property")
+        results = pinecone_service.list_vectors(namespace="property")
         
         if not results:
             return []
@@ -43,7 +43,7 @@ def get_property_list(pinecone_service: PineconeService) -> list:
         properties = []
         for match in results:
             # テキストから物件情報を抽出
-            text = match.text
+            text = match.metadata["text"]
             lines = text.split('\n')
             
             # 物件名と場所を抽出（最初の2行を想定）
