@@ -206,7 +206,7 @@ def render_chat(pinecone_service: PineconeService):
                 prompt,
                 system_prompt=selected_template_data["system_prompt"],
                 response_template=selected_template_data["response_template"],
-                property_info=st.session_state.get("property_info", "物件情報が見つかりませんでした。")
+                property_info=st.session_state.get("property_info", "物件情報はありません。")
             )
             
             # アシスタントの応答を表示
