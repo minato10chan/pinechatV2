@@ -66,7 +66,8 @@ class LangChainService:
         search_details = [
             {
                 "スコア": round(doc[1], 4),  # 類似度スコアを小数点4桁まで表示
-                "テキスト": doc[0].page_content[:100] + "..."  # テキストの一部を表示
+                "テキスト": doc[0].page_content[:100] + "...",  # テキストの一部を表示
+                "メタデータ": doc[0].metadata  # メタデータを追加
             }
             for doc in filtered_docs
         ]
