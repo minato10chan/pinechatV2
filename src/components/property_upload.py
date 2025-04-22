@@ -30,7 +30,7 @@ def render_property_upload(pinecone_service: PineconeService):
         # 物件種別
         property_type = st.selectbox(
             "物件種別",
-            ["一戸建て", "土地"],
+            ["一戸建て", "土地", "マンション"],
             help="物件の種別を選択してください"
         )
         
