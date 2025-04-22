@@ -55,6 +55,12 @@ def render_property_upload(pinecone_service: PineconeService):
         # 詳細住所
         detailed_address = st.text_input("詳細住所", help="物件の詳細な住所を入力してください")
         
+        # 物件の詳細情報
+        property_details = st.text_area(
+            "物件の詳細情報",
+            help="物件の詳細な情報を入力してください"
+        )
+        
         # 緯度・経度
         col3, col4 = st.columns(2)
         with col3:
@@ -69,20 +75,6 @@ def render_property_upload(pinecone_service: PineconeService):
                 value="0.0",
                 help="物件の経度を入力してください"
             )
-        
-        # 物件の詳細情報
-        property_details = st.text_area(
-            "物件の詳細情報",
-            help="物件の詳細な情報を入力してください"
-        )
-        
-        # 追加資料
-        additional_materials = st.file_uploader(
-            "追加資料",
-            type=["pdf", "doc", "docx", "xls", "xlsx", "jpg", "jpeg", "png"],
-            accept_multiple_files=True,
-            help="物件に関連する追加資料をアップロードしてください"
-        )
         
         # アップロードボタン
         submit_button = st.form_submit_button("アップロード")
@@ -101,15 +93,8 @@ def render_property_upload(pinecone_service: PineconeService):
                     "prefecture": prefecture,
                     "city": city,
                     "detailed_address": detailed_address,
-                    "latitude": latitude,
-                    "longitude": longitude,
                     "property_details": property_details
                 }
-                
-                # 追加資料の処理
-                if additional_materials:
-                    # ここで追加資料の処理を実装
-                    pass
                 
                 # Pineconeへのアップロード
                 chunks = [{
