@@ -58,21 +58,15 @@ def render_property_upload(pinecone_service: PineconeService):
         # 緯度・経度
         col3, col4 = st.columns(2)
         with col3:
-            latitude = st.number_input(
+            latitude = st.text_input(
                 "緯度",
-                min_value=-90.0,
-                max_value=90.0,
-                value=0.0,
-                format="%.6f",
+                value="0.0",
                 help="物件の緯度を入力してください"
             )
         with col4:
-            longitude = st.number_input(
+            longitude = st.text_input(
                 "経度",
-                min_value=-180.0,
-                max_value=180.0,
-                value=0.0,
-                format="%.6f",
+                value="0.0",
                 help="物件の経度を入力してください"
             )
         
