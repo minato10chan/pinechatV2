@@ -58,10 +58,15 @@ class LangChainService:
         # メタデータも検索対象に含める
         for doc in docs:
             # メタデータの各フィールドを検索対象に追加
+            metadata_text = []
             for key, value in doc[0].metadata.items():
                 if isinstance(value, str):
                     # メタデータの値をテキストに追加
-                    doc[0].page_content += f"\n{key}: {value}"
+                    metadata_text.append(f"{key}: {value}")
+            
+            # メタデータをテキストの前に追加
+            if metadata_text:
+                doc[0].page_content = "\n".join(metadata_text) + "\n\n" + doc[0].page_content
         
         # スコアでフィルタリング
         filtered_docs = [
