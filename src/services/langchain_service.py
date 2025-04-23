@@ -52,6 +52,14 @@ class LangChainService:
         # より多くの結果を取得して、後でフィルタリング
         docs = self.vectorstore.similarity_search_with_score(query, k=top_k * 2)
         
+        # メタデータも検索対象に含める
+        for doc in docs:
+            # メタデータの各フィールドを検索対象に追加
+            for key, value in doc[0].metadata.items():
+                if isinstance(value, str):
+                    # メタデータの値をテキストに追加
+                    doc[0].page_content += f"\n{key}: {value}"
+        
         # スコアでフィルタリング
         filtered_docs = [
             doc for doc in docs 
@@ -67,7 +75,18 @@ class LangChainService:
             {
                 "スコア": round(doc[1], 4),  # 類似度スコアを小数点4桁まで表示
                 "テキスト": doc[0].page_content[:100] + "...",  # テキストの一部を表示
-                "メタデータ": doc[0].metadata  # メタデータを追加
+                "メタデータ": doc[0].metadata,  # メタデータを追加
+                "類似度判断": {
+                    "閾値": SIMILARITY_THRESHOLD,
+                    "閾値以上": doc[1] >= SIMILARITY_THRESHOLD,
+                    "スコア詳細": f"スコア {round(doc[1], 4)} は閾値 {SIMILARITY_THRESHOLD} に対して {'以上' if doc[1] >= SIMILARITY_THRESHOLD else '未満'}",
+                    "理解過程": {
+                        "クエリ": query,
+                        "テキスト": doc[0].page_content,
+                        "類似度計算": "コサイン類似度を使用して、クエリとテキストのベクトル間の類似度を計算",
+                        "スコア解釈": f"スコア {round(doc[1], 4)} は、クエリとテキストの類似度を0から1の間で表現。1に近いほど類似度が高い。"
+                    }
+                }
             }
             for doc in filtered_docs
         ]
@@ -76,6 +95,8 @@ class LangChainService:
         print(f"検索結果数: {len(filtered_docs)}")  # デバッグ用
         for detail in search_details:
             print(f"スコア: {detail['スコア']}, テキスト: {detail['テキスト']}")  # デバッグ用
+            print(f"類似度判断: {detail['類似度判断']['スコア詳細']}")  # デバッグ用
+            print(f"理解過程: {detail['類似度判断']['理解過程']['スコア解釈']}")  # デバッグ用
         
         return context_text, search_details
 
