@@ -46,7 +46,9 @@ def process_csv_file(file):
                 # デコードした内容をStringIOに変換
                 file_like = io.StringIO(decoded_content)
                 # CSVとして読み込む
-                df = pd.read_csv(file_like)
+                df = pd.read_csv(file_like, header=None, names=[
+                    "大カテゴリ", "中カテゴリ", "施設名", "緯度", "経度", "徒歩距離", "徒歩分数", "直線距離"
+                ])
                 break  # 成功したらループを抜ける
             except (UnicodeDecodeError, pd.errors.EmptyDataError):
                 continue  # 失敗したら次のエンコーディングを試す
@@ -58,13 +60,20 @@ def process_csv_file(file):
         chunks = []
         for index, row in df.iterrows():
             # 各行をテキストに変換
-            text = " ".join([str(val) for val in row.values if pd.notna(val)])
+            text = f"{row['施設名']}は{row['大カテゴリ']}の{row['中カテゴリ']}です。"
             if text.strip():
                 chunks.append({
                     "id": f"csv_{index}_{datetime.now().strftime('%Y%m%d%H%M%S')}",
                     "text": text,
                     "metadata": {
-                        "row_data": row.to_dict()
+                        "main_category": row['大カテゴリ'],
+                        "sub_category": row['中カテゴリ'],
+                        "facility_name": row['施設名'],
+                        "latitude": float(row['緯度']),
+                        "longitude": float(row['経度']),
+                        "walking_distance": int(row['徒歩距離']),
+                        "walking_minutes": int(row['徒歩分数']),
+                        "straight_distance": int(row['直線距離'])
                     }
                 })
         

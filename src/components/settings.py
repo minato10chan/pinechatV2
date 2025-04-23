@@ -287,20 +287,46 @@ def render_settings(pinecone_service: PineconeService):
                                     )
                                 else:
                                     # デフォルトnamespaceの表示
+                                    # 既存のデータと新しいデータの両方に対応
                                     display_columns = [
                                         'main_category',
                                         'sub_category',
+                                        'facility_name',
                                         'city',
                                         'created_date',
                                         'upload_date',
-                                        'source'
+                                        'source',
+                                        'latitude',
+                                        'longitude',
+                                        'walking_distance',
+                                        'walking_minutes',
+                                        'straight_distance'
                                     ]
                                 
                                 # 存在する列のみを表示
                                 available_columns = [col for col in display_columns if col in df.columns]
                                 if available_columns:
+                                    # 列名の日本語対応
+                                    column_names = {
+                                        'main_category': '大カテゴリ',
+                                        'sub_category': '中カテゴリ',
+                                        'facility_name': '施設名',
+                                        'city': '市区町村',
+                                        'created_date': 'データ作成日',
+                                        'upload_date': 'アップロード日',
+                                        'source': 'ソース元',
+                                        'latitude': '緯度',
+                                        'longitude': '経度',
+                                        'walking_distance': '徒歩距離(m)',
+                                        'walking_minutes': '徒歩分数(分)',
+                                        'straight_distance': '直線距離(m)'
+                                    }
+                                    
+                                    # 列名を日本語に変換
+                                    df_display = df[available_columns].rename(columns=column_names)
+                                    
                                     st.dataframe(
-                                        df[available_columns],
+                                        df_display,
                                         hide_index=True,
                                         use_container_width=True
                                     )
