@@ -49,6 +49,9 @@ class LangChainService:
 
     def get_relevant_context(self, query: str, top_k: int = DEFAULT_TOP_K) -> Tuple[str, List[Dict[str, Any]]]:
         """クエリに関連する文脈を取得"""
+        # クエリのベクトル化
+        query_vector = self.embeddings.embed_query(query)
+        
         # より多くの結果を取得して、後でフィルタリング
         docs = self.vectorstore.similarity_search_with_score(query, k=top_k * 2)
         
@@ -83,7 +86,14 @@ class LangChainService:
                     "理解過程": {
                         "クエリ": query,
                         "テキスト": doc[0].page_content,
-                        "類似度計算": "コサイン類似度を使用して、クエリとテキストのベクトル間の類似度を計算",
+                        "類似度計算": {
+                            "方法": "コサイン類似度",
+                            "計算式": "cos(θ) = (A・B) / (||A|| ||B||)",
+                            "説明": "クエリとテキストのベクトル間の角度の余弦を計算。1に近いほど類似度が高い。",
+                            "クエリベクトル": f"次元数: {len(query_vector)}",
+                            "テキストベクトル": f"次元数: {len(doc[0].embedding)}",
+                            "スコア": round(doc[1], 4)
+                        },
                         "スコア解釈": f"スコア {round(doc[1], 4)} は、クエリとテキストの類似度を0から1の間で表現。1に近いほど類似度が高い。"
                     }
                 }
@@ -97,6 +107,7 @@ class LangChainService:
             print(f"スコア: {detail['スコア']}, テキスト: {detail['テキスト']}")  # デバッグ用
             print(f"類似度判断: {detail['類似度判断']['スコア詳細']}")  # デバッグ用
             print(f"理解過程: {detail['類似度判断']['理解過程']['スコア解釈']}")  # デバッグ用
+            print(f"類似度計算: {detail['類似度判断']['理解過程']['類似度計算']['説明']}")  # デバッグ用
         
         return context_text, search_details
 
