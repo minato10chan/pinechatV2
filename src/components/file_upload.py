@@ -62,19 +62,22 @@ def process_csv_file(file):
             # 各行をテキストに変換
             text = f"{row['施設名']}は{row['大カテゴリ']}の{row['中カテゴリ']}です。"
             if text.strip():
+                # NaN値を適切に処理
+                metadata = {
+                    "main_category": row['大カテゴリ'],
+                    "sub_category": row['中カテゴリ'],
+                    "facility_name": row['施設名'],
+                    "latitude": float(row['緯度']) if pd.notna(row['緯度']) else None,
+                    "longitude": float(row['経度']) if pd.notna(row['経度']) else None,
+                    "walking_distance": int(row['徒歩距離']) if pd.notna(row['徒歩距離']) else None,
+                    "walking_minutes": int(row['徒歩分数']) if pd.notna(row['徒歩分数']) else None,
+                    "straight_distance": int(row['直線距離']) if pd.notna(row['直線距離']) else None
+                }
+                
                 chunks.append({
                     "id": f"csv_{index}_{datetime.now().strftime('%Y%m%d%H%M%S')}",
                     "text": text,
-                    "metadata": {
-                        "main_category": row['大カテゴリ'],
-                        "sub_category": row['中カテゴリ'],
-                        "facility_name": row['施設名'],
-                        "latitude": float(row['緯度']),
-                        "longitude": float(row['経度']),
-                        "walking_distance": int(row['徒歩距離']),
-                        "walking_minutes": int(row['徒歩分数']),
-                        "straight_distance": int(row['直線距離'])
-                    }
+                    "metadata": metadata
                 })
         
         return chunks
