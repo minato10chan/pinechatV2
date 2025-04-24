@@ -71,11 +71,11 @@ class MetadataProcessor:
 - 必須フィールドは必ず含めてください
 - 値が不明な場合は空文字列（""）を使用してください
 - 追加情報は additional_info フィールドに含めてください"""),
-            ("human", text)
+            ("human", "{text}")
         ])
         
         chain = prompt | self.llm
-        response = chain.invoke({})
+        response = chain.invoke({"text": text})
         
         try:
             # JSONをパースして辞書に変換
