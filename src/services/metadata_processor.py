@@ -71,7 +71,8 @@ class MetadataProcessor:
 注意：
 - 必須フィールドは必ず含めてください
 - 値が不明な場合は空文字列（""）を使用してください
-- 追加情報は additional_info フィールドに含めてください"""),
+- 追加情報は additional_info フィールドに含めてください
+- 複数の情報がある場合は、最初の情報のみを抽出してください"""),
             ("human", "{text}")
         ])
         
@@ -81,7 +82,15 @@ class MetadataProcessor:
         try:
             # AIMessageからテキストを取得してJSONをパース
             response_text = response.content
-            metadata = json.loads(response_text)
+            
+            # 最初のJSONオブジェクトのみを抽出
+            first_json_start = response_text.find("{")
+            first_json_end = response_text.find("}", first_json_start) + 1
+            if first_json_start == -1 or first_json_end == 0:
+                raise ValueError("No JSON object found in response")
+            
+            json_text = response_text[first_json_start:first_json_end]
+            metadata = json.loads(json_text)
             return metadata
         except json.JSONDecodeError as e:
             raise ValueError(f"Failed to parse metadata: {str(e)}\nResponse text: {response_text}")
