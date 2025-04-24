@@ -4,6 +4,7 @@ from langchain.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from langchain.output_parsers import PydanticOutputParser
 from pydantic import BaseModel, Field
+from src.config.settings import OPENAI_API_KEY
 
 @dataclass
 class MetadataField:
@@ -14,7 +15,13 @@ class MetadataField:
 
 class MetadataProcessor:
     def __init__(self, model_name: str = "gpt-3.5-turbo"):
-        self.llm = ChatOpenAI(model_name=model_name)
+        if not OPENAI_API_KEY:
+            raise ValueError("OPENAI_API_KEY is not set in settings")
+        
+        self.llm = ChatOpenAI(
+            model_name=model_name,
+            openai_api_key=OPENAI_API_KEY
+        )
         
         # 質問タイプごとのメタデータフィールド定義
         self.metadata_fields = {
