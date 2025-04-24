@@ -6,12 +6,8 @@ from src.config.settings import (
     EMBEDDING_MODEL,
     DEFAULT_TOP_K,
     SIMILARITY_THRESHOLD,
-    DEFAULT_PROMPT_TEMPLATES,
-    DEFAULT_SYSTEM_PROMPT,
-    DEFAULT_RESPONSE_TEMPLATE,
-    save_prompt_templates,
     load_prompt_templates,
-    save_default_prompts
+    save_prompt_templates
 )
 import json
 import pandas as pd
@@ -97,13 +93,16 @@ def render_settings(pinecone_service: PineconeService):
         st.markdown("### プロンプトテンプレートの管理")
         st.markdown("チャットボットの応答を制御するプロンプトテンプレートを管理します。")
         
+        # プロンプトテンプレートの読み込み
+        prompt_templates, default_system_prompt, default_response_template = load_prompt_templates()
+        
         # デフォルトプロンプトの編集
         with st.expander("📌 デフォルトプロンプトの編集", expanded=True):
             st.markdown("#### システムプロンプト")
             st.markdown("チャットボットの基本的な振る舞いを定義します。")
             default_system_prompt = st.text_area(
                 "システムプロンプト",
-                value=DEFAULT_SYSTEM_PROMPT,
+                value=default_system_prompt,
                 height=200,
                 help="チャットボットの基本的な振る舞いや性格を定義するプロンプトです。"
             )
@@ -112,13 +111,24 @@ def render_settings(pinecone_service: PineconeService):
             st.markdown("応答の形式を定義します。")
             default_response_template = st.text_area(
                 "レスポンステンプレート",
-                value=DEFAULT_RESPONSE_TEMPLATE,
+                value=default_response_template,
                 height=200,
                 help="応答の形式を定義するテンプレートです。{question}と{answer}は自動的に置換されます。"
             )
             
             if st.button("💾 デフォルトプロンプトを保存", type="primary"):
-                save_default_prompts(default_system_prompt, default_response_template)
+                # デフォルトテンプレートを更新
+                default_template = next((t for t in prompt_templates if t["name"] == "デフォルト"), None)
+                if default_template:
+                    default_template["system_prompt"] = default_system_prompt
+                    default_template["response_template"] = default_response_template
+                else:
+                    prompt_templates.append({
+                        "name": "デフォルト",
+                        "system_prompt": default_system_prompt,
+                        "response_template": default_response_template
+                    })
+                save_prompt_templates(prompt_templates)
                 st.success("✅ デフォルトプロンプトを保存しました")
                 st.rerun()
         
@@ -126,9 +136,10 @@ def render_settings(pinecone_service: PineconeService):
         st.markdown("### カスタムプロンプトテンプレート")
         st.markdown("特定の用途に特化したプロンプトテンプレートを管理します。")
         
-        prompt_templates = load_prompt_templates()
-        
         for template in prompt_templates:
+            if template["name"] == "デフォルト":
+                continue  # デフォルトテンプレートは既に編集済み
+                
             with st.expander(f"📝 {template['name']}", expanded=False):
                 new_name = st.text_input("名前", value=template['name'], key=f"name_{template['name']}")
                 new_system_prompt = st.text_area(
