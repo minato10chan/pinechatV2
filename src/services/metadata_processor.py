@@ -56,16 +56,17 @@ class MetadataProcessor:
             raise ValueError(f"Unknown question type: {question_type}")
         
         fields = self.metadata_fields[question_type]
+        field_examples = "\n".join([f'    "{field.name}": "値の例"' for field in fields])
+        
         prompt = ChatPromptTemplate.from_messages([
             ("system", f"""以下のテキストから、{question_type}に関する情報を抽出してください。
 必要なフィールド:
 {chr(10).join([f"- {field.name}: {field.description} {'(必須)' if field.required else ''}" for field in fields])}
 
 以下の形式のJSONで出力してください：
-{{
-    "field_name": "value",
-    ...
-}}
+{{{{
+{field_examples}
+}}}}
 
 注意：
 - 必須フィールドは必ず含めてください
