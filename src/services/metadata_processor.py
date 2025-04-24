@@ -5,6 +5,7 @@ from langchain.prompts import ChatPromptTemplate
 from langchain.output_parsers import PydanticOutputParser
 from pydantic import BaseModel, Field
 from src.config.settings import OPENAI_API_KEY
+import json
 
 @dataclass
 class MetadataField:
@@ -60,16 +61,28 @@ class MetadataProcessor:
 必要なフィールド:
 {chr(10).join([f"- {field.name}: {field.description} {'(必須)' if field.required else ''}" for field in fields])}
 
-JSON形式で出力してください。"""),
+以下の形式のJSONで出力してください：
+{{
+    "field_name": "value",
+    ...
+}}
+
+注意：
+- 必須フィールドは必ず含めてください
+- 値が不明な場合は空文字列（""）を使用してください
+- 追加情報は additional_info フィールドに含めてください"""),
             ("human", text)
         ])
         
         chain = prompt | self.llm
         response = chain.invoke({})
         
-        # ここでJSONをパースして辞書に変換
-        # 実際の実装では、より堅牢なJSONパース処理が必要
-        return eval(response)  # 注意: 実際の実装では安全なJSONパースを使用すること
+        try:
+            # JSONをパースして辞書に変換
+            metadata = json.loads(response)
+            return metadata
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Failed to parse metadata: {str(e)}")
 
     def validate_metadata(self, question_type: str, metadata: Dict[str, Any]) -> bool:
         """メタデータの検証"""
