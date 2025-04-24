@@ -12,40 +12,39 @@ class ResponseTemplates:
     def __init__(self):
         self.templates = {
             "facility": ResponseTemplate(
-                template="""以下の施設情報をお伝えします：
+                template="""{name}についてお調べしました。
 
-施設名: {name}
-住所: {address}
-距離: {distance}
-営業時間: {business_hours}
-その他の情報: {additional_info}
+場所は{address}にあります。
+{distance}の場所にあります。
 
-ご不明な点がございましたら、お気軽にお申し付けください。""",
+{additional_info}
+
+他に気になることはありますか？""",
                 required_fields=["name", "address", "distance"]
             ),
             "area": ResponseTemplate(
-                template="""以下の地域情報をお伝えします：
+                template="""{area_name}の地域情報についてお伝えします。
 
-地域名: {area_name}
-治安状況: {safety}
-交通アクセス: {transportation}
-教育環境: {education}
-その他の特徴: {additional_info}
+治安状況は{safety}です。
+交通アクセスは{transportation}です。
+教育環境は{education}です。
 
-ご不明な点がございましたら、お気軽にお申し付けください。""",
+{additional_info}
+
+他に気になることはありますか？""",
                 required_fields=["area_name", "safety", "transportation"]
             ),
             "property": ResponseTemplate(
-                template="""以下の物件情報をお伝えします：
+                template="""{property_name}の物件情報についてお伝えします。
 
-物件名: {property_name}
-価格: {price}
-間取り: {layout}
-面積: {area}
-設備: {facilities}
-その他の特徴: {additional_info}
+価格は{price}です。
+間取りは{layout}です。
+面積は{area}です。
+設備は{facilities}です。
 
-ご不明な点がございましたら、お気軽にお申し付けください。""",
+{additional_info}
+
+他に気になることはありますか？""",
                 required_fields=["property_name", "price", "layout"]
             )
         }

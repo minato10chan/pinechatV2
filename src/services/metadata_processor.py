@@ -30,7 +30,6 @@ class MetadataProcessor:
                 MetadataField("name", "施設名", True),
                 MetadataField("address", "住所", True),
                 MetadataField("distance", "距離", True),
-                MetadataField("business_hours", "営業時間"),
                 MetadataField("additional_info", "その他の情報")
             ],
             "area": [
