@@ -56,30 +56,45 @@ def process_csv_file(file):
         if 'df' not in locals():
             raise ValueError("CSVファイルのエンコーディングを特定できませんでした。")
         
+        # デバッグ情報の表示
+        st.write("CSVファイルの内容:")
+        st.dataframe(df)
+        
         # 各列を結合してテキストを作成
         chunks = []
         for index, row in df.iterrows():
-            # 各行をテキストに変換
-            text = f"{row['施設名']}は{row['大カテゴリ']}の{row['中カテゴリ']}です。"
-            if text.strip():
-                # NaN値を適切に処理
-                metadata = {
-                    "main_category": row['大カテゴリ'],
-                    "sub_category": row['中カテゴリ'],
-                    "facility_name": row['施設名'],
-                    "latitude": float(row['緯度']) if pd.notna(row['緯度']) else None,
-                    "longitude": float(row['経度']) if pd.notna(row['経度']) else None,
-                    "walking_distance": int(row['徒歩距離']) if pd.notna(row['徒歩距離']) else None,
-                    "walking_minutes": int(row['徒歩分数']) if pd.notna(row['徒歩分数']) else None,
-                    "straight_distance": int(row['直線距離']) if pd.notna(row['直線距離']) else None
-                }
-                
-                chunks.append({
-                    "id": f"csv_{index}_{datetime.now().strftime('%Y%m%d%H%M%S')}",
-                    "text": text,
-                    "metadata": metadata
-                })
+            try:
+                # 各行をテキストに変換
+                text = f"{row['施設名']}は{row['大カテゴリ']}の{row['中カテゴリ']}です。"
+                if text.strip():
+                    # NaN値を適切に処理し、型変換を確実に行う
+                    metadata = {
+                        "main_category": str(row['大カテゴリ']),
+                        "sub_category": str(row['中カテゴリ']),
+                        "facility_name": str(row['施設名']),
+                        "latitude": float(row['緯度']) if pd.notna(row['緯度']) else None,
+                        "longitude": float(row['経度']) if pd.notna(row['経度']) else None,
+                        "walking_distance": int(float(row['徒歩距離'])) if pd.notna(row['徒歩距離']) else None,
+                        "walking_minutes": int(float(row['徒歩分数'])) if pd.notna(row['徒歩分数']) else None,
+                        "straight_distance": int(float(row['直線距離'])) if pd.notna(row['直線距離']) else None
+                    }
+                    
+                    # デバッグ情報の表示
+                    st.write(f"行 {index + 1} のメタデータ:")
+                    st.json(metadata)
+                    
+                    chunks.append({
+                        "id": f"csv_{index}_{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                        "text": text,
+                        "metadata": metadata
+                    })
+            except Exception as e:
+                st.error(f"行 {index + 1} の処理中にエラーが発生しました: {str(e)}")
+                continue
         
+        if not chunks:
+            raise ValueError("有効なデータが1件も見つかりませんでした。")
+            
         return chunks
     except Exception as e:
         raise ValueError(f"CSVファイルの処理に失敗しました: {str(e)}")

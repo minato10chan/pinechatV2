@@ -134,7 +134,7 @@ class PineconeService:
                         print(f"  チャンク {j}/{len(batch)} の埋め込みベクトルを生成中...")
                         vector = self.get_embedding(chunk["text"])
                         
-                        # メタデータの設定
+                        # メタデータの設定（CSVファイルのメタデータを含める）
                         metadata = {
                             "text": chunk["text"],
                             "filename": chunk.get("filename", ""),
@@ -144,8 +144,18 @@ class PineconeService:
                             "city": chunk.get("metadata", {}).get("city", ""),
                             "created_date": chunk.get("metadata", {}).get("created_date", ""),
                             "upload_date": chunk.get("metadata", {}).get("upload_date", ""),
-                            "source": chunk.get("metadata", {}).get("source", "")
+                            "source": chunk.get("metadata", {}).get("source", ""),
+                            # CSVファイルのメタデータ
+                            "facility_name": chunk.get("metadata", {}).get("facility_name", ""),
+                            "latitude": chunk.get("metadata", {}).get("latitude"),
+                            "longitude": chunk.get("metadata", {}).get("longitude"),
+                            "walking_distance": chunk.get("metadata", {}).get("walking_distance"),
+                            "walking_minutes": chunk.get("metadata", {}).get("walking_minutes"),
+                            "straight_distance": chunk.get("metadata", {}).get("straight_distance")
                         }
+                        
+                        # デバッグ情報の表示
+                        print(f"  メタデータ: {json.dumps(metadata, ensure_ascii=False)}")
                         
                         vectors.append({
                             "id": chunk["id"],
