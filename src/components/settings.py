@@ -62,17 +62,17 @@ def render_settings(pinecone_service: PineconeService):
 
     # 検索設定タブ
     with tab2:
-        st.markdown("### 検索の精度設定")
-        st.markdown("検索結果の精度と表示数を調整します。")
+        st.markdown("### 検索の基本設定")
+        st.markdown("検索時の基本的な設定を行います。")
         
         col1, col2 = st.columns(2)
         with col1:
             top_k = st.number_input(
-                "🔢 検索結果数",
+                "🔍 検索結果数",
                 min_value=1,
                 max_value=10,
                 value=st.session_state.get("top_k", DEFAULT_TOP_K),
-                help="検索時に返す結果の数。多いほど関連性の低い結果も含まれます。"
+                help="検索結果として返す最大件数。大きすぎると処理が遅くなります。"
             )
         
         with col2:
@@ -82,7 +82,7 @@ def render_settings(pinecone_service: PineconeService):
                 max_value=1.0,
                 value=st.session_state.get("similarity_threshold", SIMILARITY_THRESHOLD),
                 step=0.05,
-                help="この値以上の類似度を持つ結果のみを表示します。高いほど厳密な検索になります。"
+                help="検索結果の類似度のしきい値。高いほど厳密な検索になります。"
             )
         
         st.markdown("---")
