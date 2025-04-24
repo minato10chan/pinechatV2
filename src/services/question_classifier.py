@@ -30,6 +30,9 @@ class QuestionClassifier:
         )
         self.parser = PydanticOutputParser(pydantic_object=QuestionType)
         
+        # フォーマット指示を取得
+        format_instructions = self.parser.get_format_instructions()
+        
         self.prompt = ChatPromptTemplate.from_messages([
             ("system", """あなたは質問のタイプを判別する専門家です。
 以下の3つのカテゴリーに分類してください：
@@ -56,7 +59,10 @@ class QuestionClassifier:
     def classify(self, question: str) -> QuestionType:
         """質問のタイプを判別する"""
         chain = self.prompt | self.llm | self.parser
-        return chain.invoke({"question": question})
+        return chain.invoke({
+            "question": question,
+            "format_instructions": self.parser.get_format_instructions()
+        })
 
     def get_question_type(self, question: str) -> Optional[str]:
         """質問タイプを取得（確信度が0.7以上の場合のみ）"""

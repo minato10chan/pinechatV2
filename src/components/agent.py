@@ -25,6 +25,9 @@ def render_agent(pinecone_service: PineconeService):
         st.write("1. タスクの分析")
         st.write(f"- 入力された質問: {user_input}")
         
+        # 質問タイプの初期化
+        question_type = None
+        
         try:
             # 質問タイプの判別
             st.write("2. 質問タイプの判別")
