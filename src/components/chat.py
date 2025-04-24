@@ -4,7 +4,6 @@ from datetime import datetime
 from src.services.pinecone_service import PineconeService
 from src.services.langchain_service import LangChainService
 from src.config.settings import (
-    DEFAULT_PROMPT_TEMPLATES,
     load_prompt_templates
 )
 import streamlit.components.v1 as components
@@ -86,7 +85,8 @@ def render_chat(pinecone_service: PineconeService):
         st.session_state.langchain_service = LangChainService()
     
     # プロンプトテンプレートの読み込み（毎回最新の状態を取得）
-    st.session_state.prompt_templates = load_prompt_templates()
+    prompt_templates, _, _ = load_prompt_templates()
+    st.session_state.prompt_templates = prompt_templates
     
     # サイドバーに履歴管理機能を配置
     with st.sidebar:
@@ -100,7 +100,8 @@ def render_chat(pinecone_service: PineconeService):
             template_names,
             index=0
         )
-                # 選択されたテンプレートの内容を表示
+        
+        # 選択されたテンプレートの内容を表示
         selected_template_data = next(
             template for template in st.session_state.prompt_templates 
             if template["name"] == selected_template
