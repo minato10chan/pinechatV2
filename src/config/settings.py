@@ -43,61 +43,6 @@ def get_metadata_creation_date(metadata):
     return metadata["creation_date"]
 
 # Prompt Settings
-DEFAULT_SYSTEM_PROMPT = """あなたは物件情報に特化したAIアシスタントです。
-ユーザーの質問に対して、以下のルールに従って回答してください：
-
-1. 常に日本語で回答してください
-2. 物件情報を優先的に参照し、具体的な情報を提供してください
-3. 物件の特徴やメリットを分かりやすく説明してください
-4. 必要に応じて物件の比較や提案を行ってください
-5. 不明な点や追加情報が必要な場合は、その旨を明確に伝えてください
-
-物件情報の参照方法：
-- 物件名、場所、特徴などのキーワードに基づいて関連情報を検索します
-- 複数の物件情報がある場合は、比較して説明します
-- 物件の詳細情報（間取り、設備、価格など）を適切に活用します
-"""
-
-DEFAULT_RESPONSE_TEMPLATE = """物件情報: {property_info}
-
-質問: {question}
-
-回答:
-{answer}
-
-※ この情報は物件情報に基づいていますが、最新情報は公式サイトでご確認ください。
-"""
-
-# プロンプトテンプレートの設定
-DEFAULT_PROMPT_TEMPLATES = [
-    {
-        "name": "デフォルト",
-        "system_prompt": """あなたは物件情報に特化したAIアシスタントです。
-ユーザーの質問に対して、以下のルールに従って回答してください：
-
-1. 常に日本語で回答してください
-2. 物件情報を優先的に参照し、具体的な情報を提供してください
-3. 物件の特徴やメリットを分かりやすく説明してください
-4. 必要に応じて物件の比較や提案を行ってください
-5. 不明な点や追加情報が必要な場合は、その旨を明確に伝えてください
-
-物件情報の参照方法：
-- 物件名、場所、特徴などのキーワードに基づいて関連情報を検索します
-- 複数の物件情報がある場合は、比較して説明します
-- 物件の詳細情報（間取り、設備、価格など）を適切に活用します
-""",
-        "response_template": """物件情報: {property_info}
-
-質問: {question}
-
-回答:
-{answer}
-
-※ この情報は物件情報に基づいていますが、最新情報は公式サイトでご確認ください。
-"""
-    }
-]
-
 # プロンプトテンプレートの保存と読み込み
 PROMPT_TEMPLATES_FILE = "prompt_templates.json"
 
@@ -110,30 +55,15 @@ def load_prompt_templates():
     """プロンプトテンプレートを読み込み"""
     if os.path.exists(PROMPT_TEMPLATES_FILE):
         with open(PROMPT_TEMPLATES_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return DEFAULT_PROMPT_TEMPLATES.copy()
+            templates = json.load(f)
+            # デフォルトテンプレートを取得
+            default_template = next((t for t in templates if t["name"] == "デフォルト"), None)
+            if default_template:
+                return templates, default_template["system_prompt"], default_template["response_template"]
+    return [], "", ""
 
-# デフォルトプロンプトの保存と読み込み
-DEFAULT_PROMPTS_FILE = "default_prompts.json"
-
-def save_default_prompts(system_prompt, response_template):
-    """デフォルトプロンプトを保存"""
-    with open(DEFAULT_PROMPTS_FILE, "w", encoding="utf-8") as f:
-        json.dump({
-            "system_prompt": system_prompt,
-            "response_template": response_template
-        }, f, ensure_ascii=False, indent=2)
-
-def load_default_prompts():
-    """デフォルトプロンプトを読み込み"""
-    if os.path.exists(DEFAULT_PROMPTS_FILE):
-        with open(DEFAULT_PROMPTS_FILE, "r", encoding="utf-8") as f:
-            prompts = json.load(f)
-            return prompts["system_prompt"], prompts["response_template"]
-    return DEFAULT_SYSTEM_PROMPT, DEFAULT_RESPONSE_TEMPLATE
-
-# デフォルトプロンプトの読み込み
-DEFAULT_SYSTEM_PROMPT, DEFAULT_RESPONSE_TEMPLATE = load_default_prompts()
+# プロンプトテンプレートの読み込み
+PROMPT_TEMPLATES, DEFAULT_SYSTEM_PROMPT, DEFAULT_RESPONSE_TEMPLATE = load_prompt_templates()
 
 # メタデータ設定
 METADATA_CATEGORIES = {
