@@ -72,11 +72,11 @@ def process_csv_file(file):
                         "main_category": str(row['大カテゴリ']),
                         "sub_category": str(row['中カテゴリ']),
                         "facility_name": str(row['施設名']),
-                        "latitude": float(row['緯度']) if pd.notna(row['緯度']) else None,
-                        "longitude": float(row['経度']) if pd.notna(row['経度']) else None,
-                        "walking_distance": int(float(row['徒歩距離'])) if pd.notna(row['徒歩距離']) else None,
-                        "walking_minutes": int(float(row['徒歩分数'])) if pd.notna(row['徒歩分数']) else None,
-                        "straight_distance": int(float(row['直線距離'])) if pd.notna(row['直線距離']) else None
+                        "latitude": float(row['緯度']) if pd.notna(row['緯度']) else 0.0,
+                        "longitude": float(row['経度']) if pd.notna(row['経度']) else 0.0,
+                        "walking_distance": int(float(row['徒歩距離'])) if pd.notna(row['徒歩距離']) else 0,
+                        "walking_minutes": int(float(row['徒歩分数'])) if pd.notna(row['徒歩分数']) else 0,
+                        "straight_distance": int(float(row['直線距離'])) if pd.notna(row['直線距離']) else 0
                     }
                     
                     # デバッグ情報の表示
