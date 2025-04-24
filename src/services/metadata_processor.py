@@ -79,11 +79,12 @@ class MetadataProcessor:
         response = chain.invoke({"text": text})
         
         try:
-            # JSONをパースして辞書に変換
-            metadata = json.loads(response)
+            # AIMessageからテキストを取得してJSONをパース
+            response_text = response.content
+            metadata = json.loads(response_text)
             return metadata
         except json.JSONDecodeError as e:
-            raise ValueError(f"Failed to parse metadata: {str(e)}")
+            raise ValueError(f"Failed to parse metadata: {str(e)}\nResponse text: {response_text}")
 
     def validate_metadata(self, question_type: str, metadata: Dict[str, Any]) -> bool:
         """メタデータの検証"""
