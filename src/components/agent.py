@@ -56,6 +56,18 @@ def render_agent(pinecone_service: PineconeService):
                         # 回答の表示
                         st.subheader("📝 回答")
                         st.write(response)
+                        
+                        # ベクトルデータの詳細情報を表示
+                        st.subheader("🔍 参考情報")
+                        for i, match in enumerate(search_results["matches"], 1):
+                            with st.expander(f"参考情報 {i} (スコア: {match.score:.2f})"):
+                                st.write("### テキスト")
+                                st.write(match.metadata["text"])
+                                
+                                st.write("### メタデータ")
+                                for key, value in match.metadata.items():
+                                    if key != "text":  # テキストは既に表示済み
+                                        st.write(f"- {key}: {value}")
                     else:
                         error = error_handler.handle_error(
                             ErrorType.INSUFFICIENT_INFORMATION,
