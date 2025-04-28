@@ -224,7 +224,11 @@ def render_chat(pinecone_service: PineconeService):
     # ユーザー入力
     if prompt := st.chat_input("メッセージを入力してください"):
         # ユーザーメッセージを表示
-        st.session_state.messages.append({"role": "user", "content": prompt})
+        st.session_state.messages.append({
+            "role": "user",
+            "content": prompt,
+            "timestamp": datetime.now().isoformat()
+        })
         with st.chat_message("user"):
             st.markdown(prompt)
 
@@ -247,7 +251,8 @@ def render_chat(pinecone_service: PineconeService):
             st.session_state.messages.append({
                 "role": "assistant",
                 "content": response,
-                "details": details
+                "details": details,
+                "timestamp": datetime.now().isoformat()
             })
             with st.chat_message("assistant"):
                 st.markdown(response)
