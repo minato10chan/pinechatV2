@@ -96,6 +96,10 @@ def render_chat(pinecone_service: PineconeService):
     st.title("チャット")
     st.write("アップロードしたドキュメントについて質問できます。")
 
+    # セッション状態の初期化
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+
     # LangChainサービスの初期化
     if "langchain_service" not in st.session_state:
         st.session_state.langchain_service = LangChainService()
