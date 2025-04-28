@@ -18,14 +18,15 @@ def save_chat_history(messages, filename=None):
     # CSVデータを作成
     output = io.StringIO()
     writer = csv.writer(output, quoting=csv.QUOTE_ALL)  # すべてのフィールドをクォート
-    writer.writerow(["timestamp", "role", "content"])
+    writer.writerow(["timestamp", "role", "content", "details"])
     
     for message in messages:
         # 行を書き込み
         writer.writerow([
-            datetime.now().isoformat(),
+            message.get("timestamp", datetime.now().isoformat()),  # 既存のタイムスタンプがあれば使用
             message["role"],
-            message["content"]
+            message["content"],
+            json.dumps(message.get("details", {}), ensure_ascii=False) if "details" in message else ""
         ])
     
     return output.getvalue(), filename
@@ -39,9 +40,18 @@ def load_chat_history(file):
     
     for row in reader:
         message = {
+            "timestamp": row["timestamp"],
             "role": row["role"],
             "content": row["content"]
         }
+        
+        # detailsが存在する場合はJSONとしてパース
+        if row["details"] and row["details"].strip():
+            try:
+                message["details"] = json.loads(row["details"])
+            except json.JSONDecodeError:
+                message["details"] = {}
+        
         messages.append(message)
     
     return messages
