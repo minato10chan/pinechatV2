@@ -44,7 +44,7 @@ def load_chat_history(file):
         }
         
         # detailsが存在する場合はJSONとしてパース
-        if row["details"]:
+        if row["details"] and row["details"].strip():
             try:
                 message["details"] = json.loads(row["details"])
             except json.JSONDecodeError:
@@ -196,7 +196,11 @@ def render_chat(pinecone_service: PineconeService):
             with st.container():
                 col1, col2 = st.columns([3, 1])
                 with col1:
-                    st.text(f"{message['role']}: {message['content'][:50]}...")
+                    # メッセージの内容を表示（長い場合は省略）
+                    content = message['content']
+                    if len(content) > 50:
+                        content = content[:50] + "..."
+                    st.text(f"{message['role']}: {content}")
                 with col2:
                     if st.button("削除", key=f"delete_{i}"):
                         st.session_state.messages.pop(i)
@@ -207,7 +211,7 @@ def render_chat(pinecone_service: PineconeService):
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
             # 詳細情報が含まれている場合は表示
-            if "details" in message:
+            if "details" in message and message["details"]:
                 with st.expander("詳細情報"):
                     st.json(message["details"])
 
