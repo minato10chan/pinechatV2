@@ -33,7 +33,9 @@ def save_chat_history(messages, filename=None):
 def load_chat_history(file):
     """チャット履歴をCSVファイルから読み込み"""
     messages = []
-    reader = csv.DictReader(file)
+    # ファイルをテキストモードで読み込む
+    content = file.getvalue().decode('utf-8')
+    reader = csv.DictReader(io.StringIO(content))
     
     for row in reader:
         message = {
