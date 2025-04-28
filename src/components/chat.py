@@ -10,37 +10,47 @@ from src.config.settings import (
 )
 import streamlit.components.v1 as components
 
-def save_chat_history(messages, filename=None, format="csv"):
-    """チャット履歴をファイルとして保存"""
+def save_chat_history(messages, filename=None):
+    """チャット履歴をCSVファイルとして保存"""
     if filename is None:
-        filename = f"chat_history_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        filename = f"chat_history_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
     
-    if format == "csv":
-        # CSV形式で保存
-        output = io.StringIO()
-        writer = csv.writer(output)
-        writer.writerow(["タイムスタンプ", "役割", "メッセージ"])
-        
-        for message in messages:
-            writer.writerow([
-                datetime.now().isoformat(),
-                message["role"],
-                message["content"]
-            ])
-        
-        return output.getvalue(), f"{filename}.csv", "text/csv"
-    else:
-        # JSON形式で保存（後方互換性のため）
-        save_data = {
-            "timestamp": datetime.now().isoformat(),
-            "messages": messages
-        }
-        return json.dumps(save_data, ensure_ascii=False, indent=2), f"{filename}.json", "application/json"
+    # CSVデータを作成
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["timestamp", "role", "content", "details"])
+    
+    for message in messages:
+        writer.writerow([
+            datetime.now().isoformat(),
+            message["role"],
+            message["content"],
+            json.dumps(message.get("details", {}), ensure_ascii=False) if "details" in message else ""
+        ])
+    
+    return output.getvalue(), filename
 
 def load_chat_history(file):
-    """チャット履歴をJSONファイルから読み込み"""
-    data = json.load(file)
-    return data.get("messages", [])
+    """チャット履歴をCSVファイルから読み込み"""
+    messages = []
+    reader = csv.DictReader(file)
+    
+    for row in reader:
+        message = {
+            "role": row["role"],
+            "content": row["content"]
+        }
+        
+        # detailsが存在する場合はJSONとしてパース
+        if row["details"]:
+            try:
+                message["details"] = json.loads(row["details"])
+            except json.JSONDecodeError:
+                message["details"] = {}
+        
+        messages.append(message)
+    
+    return messages
 
 def get_property_list(pinecone_service: PineconeService) -> list:
     """物件情報の一覧を取得"""
@@ -150,19 +160,19 @@ def render_chat(pinecone_service: PineconeService):
         
         # 履歴の保存 (ローカルダウンロード)
         if st.session_state.messages:
-            history_data, filename, mime_type = save_chat_history(st.session_state.messages)
+            csv_data, filename = save_chat_history(st.session_state.messages)
             st.download_button(
                 label="履歴をダウンロード",
-                data=history_data,
+                data=csv_data,
                 file_name=filename,
-                mime=mime_type,
+                mime="text/csv",
                 key="download_history"
             )
         else:
             st.button("履歴をダウンロード", disabled=True, key="download_history_disabled")
         
         # 履歴の読み込み
-        uploaded_file = st.file_uploader("保存した履歴を読み込む", type=['json'])
+        uploaded_file = st.file_uploader("保存した履歴を読み込む", type=['csv'])
         if uploaded_file is not None:
             try:
                 loaded_messages = load_chat_history(uploaded_file)
