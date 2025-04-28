@@ -1,5 +1,7 @@
 import streamlit as st
 import json
+import csv
+import io
 from datetime import datetime
 from src.services.pinecone_service import PineconeService
 from src.services.langchain_service import LangChainService
@@ -8,22 +10,32 @@ from src.config.settings import (
 )
 import streamlit.components.v1 as components
 
-def save_chat_history(messages, filename=None):
-    """チャット履歴をJSONファイルとして保存"""
+def save_chat_history(messages, filename=None, format="csv"):
+    """チャット履歴をファイルとして保存"""
     if filename is None:
-        filename = f"chat_history_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        filename = f"chat_history_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
     
-    # メッセージを保存可能な形式に変換
-    save_data = {
-        "timestamp": datetime.now().isoformat(),
-        "messages": messages
-    }
-    
-    # JSONファイルとして保存
-    with open(filename, "w", encoding="utf-8") as f:
-        json.dump(save_data, f, ensure_ascii=False, indent=2)
-    
-    return filename
+    if format == "csv":
+        # CSV形式で保存
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(["タイムスタンプ", "役割", "メッセージ"])
+        
+        for message in messages:
+            writer.writerow([
+                datetime.now().isoformat(),
+                message["role"],
+                message["content"]
+            ])
+        
+        return output.getvalue(), f"{filename}.csv", "text/csv"
+    else:
+        # JSON形式で保存（後方互換性のため）
+        save_data = {
+            "timestamp": datetime.now().isoformat(),
+            "messages": messages
+        }
+        return json.dumps(save_data, ensure_ascii=False, indent=2), f"{filename}.json", "application/json"
 
 def load_chat_history(file):
     """チャット履歴をJSONファイルから読み込み"""
@@ -138,12 +150,12 @@ def render_chat(pinecone_service: PineconeService):
         
         # 履歴の保存 (ローカルダウンロード)
         if st.session_state.messages:
-            history_json = json.dumps(st.session_state.messages, ensure_ascii=False, indent=2)
+            history_data, filename, mime_type = save_chat_history(st.session_state.messages)
             st.download_button(
                 label="履歴をダウンロード",
-                data=history_json,
-                file_name=f"chat_history_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
-                mime="application/json",
+                data=history_data,
+                file_name=filename,
+                mime=mime_type,
                 key="download_history"
             )
         else:
