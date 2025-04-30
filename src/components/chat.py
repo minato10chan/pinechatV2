@@ -167,7 +167,9 @@ def render_chat(pinecone_service: PineconeService):
             st.session_state.property_info = "物件情報が登録されていません。"
         
         # 履歴の保存 (ローカルダウンロード)
+        st.write("デバッグ情報:")
         st.write(f"現在のメッセージ数: {len(st.session_state.messages)}")
+        st.write(f"メッセージの内容: {st.session_state.messages}")
         if len(st.session_state.messages) > 0:
             csv_data, filename = save_chat_history(st.session_state.messages)
             st.download_button(
