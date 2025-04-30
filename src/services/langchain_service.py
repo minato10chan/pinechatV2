@@ -92,13 +92,8 @@ class LangChainService:
                         "クエリ": query,
                         "テキスト": doc[0].page_content,
                         "類似度計算": {
-                            "方法": "コサイン類似度",
-                            "計算式": "cos(θ) = (A・B) / (||A|| ||B||)",
-                            "説明": "クエリとテキストのベクトル間の角度の余弦を計算。1に近いほど類似度が高い。",
-                            "クエリベクトル": f"次元数: {len(query_vector)}",
                             "スコア": round(doc[1], 4)
-                        },
-                        "スコア解釈": f"スコア {round(doc[1], 4)} は、クエリとテキストの類似度を0から1の間で表現。1に近いほど類似度が高い。"
+                        }
                     }
                 }
             }
@@ -109,9 +104,6 @@ class LangChainService:
         print(f"検索結果数: {len(filtered_docs)}")  # デバッグ用
         for detail in search_details:
             print(f"スコア: {detail['スコア']}, テキスト: {detail['テキスト']}")  # デバッグ用
-            print(f"類似度判断: {detail['類似度判断']['スコア詳細']}")  # デバッグ用
-            print(f"理解過程: {detail['類似度判断']['理解過程']['スコア解釈']}")  # デバッグ用
-            print(f"類似度計算: {detail['類似度判断']['理解過程']['類似度計算']['説明']}")  # デバッグ用
         
         return context_text, search_details
 
