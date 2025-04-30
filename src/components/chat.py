@@ -184,17 +184,25 @@ def render_chat(pinecone_service: PineconeService):
         uploaded_file = st.file_uploader("保存した履歴を読み込む", type=['csv'])
         if uploaded_file is not None:
             try:
-                loaded_messages = load_chat_history(uploaded_file)
-                st.session_state.messages = loaded_messages
-                # LangChainの会話履歴を更新
+                # 履歴を読み込む前に既存の履歴をクリア
+                st.session_state.messages = []
                 st.session_state.langchain_service.clear_memory()
+                
+                # 新しい履歴を読み込む
+                loaded_messages = load_chat_history(uploaded_file)
+                
+                # メッセージを追加
                 for message in loaded_messages:
+                    st.session_state.messages.append(message)
+                    # LangChainの会話履歴も更新
                     if message["role"] == "user":
                         st.session_state.langchain_service.message_history.add_user_message(message["content"])
                     elif message["role"] == "assistant":
                         st.session_state.langchain_service.message_history.add_ai_message(message["content"])
+                
                 st.success("履歴を読み込みました")
-                st.rerun()  # 画面を更新して履歴を表示
+                # 画面を更新して履歴を表示
+                st.experimental_rerun()
             except Exception as e:
                 st.error(f"履歴の読み込みに失敗しました: {str(e)}")
         
