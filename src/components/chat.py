@@ -194,6 +194,7 @@ def render_chat(pinecone_service: PineconeService):
                     elif message["role"] == "assistant":
                         st.session_state.langchain_service.message_history.add_ai_message(message["content"])
                 st.success("履歴を読み込みました")
+                st.rerun()  # 画面を更新して履歴を表示
             except Exception as e:
                 st.error(f"履歴の読み込みに失敗しました: {str(e)}")
         
