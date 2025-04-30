@@ -217,7 +217,6 @@ def render_chat(pinecone_service: PineconeService):
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
-            # 詳細情報が含まれている場合は表示
             if "details" in message and message["details"]:
                 with st.expander("詳細情報"):
                     st.json(message["details"])
@@ -263,19 +262,5 @@ def render_chat(pinecone_service: PineconeService):
                 "timestamp": datetime.now().isoformat()
             })
             
-            # メッセージの追加が完了したことを記録
-            st.session_state.last_message_time = datetime.now().isoformat()
-    
-    # メッセージの表示
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
-            if "details" in message and message["details"]:
-                with st.expander("詳細情報"):
-                    st.json(message["details"])
-    
-    # メッセージが追加された場合のみ画面を更新
-    if "last_message_time" in st.session_state:
-        last_message = st.session_state.messages[-1]
-        if last_message["timestamp"] == st.session_state.last_message_time:
+            # メッセージの追加が完了したら画面を更新
             st.rerun() 
