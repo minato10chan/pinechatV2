@@ -109,14 +109,6 @@ def render_chat(pinecone_service: PineconeService):
     # セッション状態の初期化
     if "messages" not in st.session_state:
         st.session_state.messages = []
-        st.session_state.initialized = True
-        st.experimental_rerun()
-
-    # デバッグ情報の表示
-    st.sidebar.write("デバッグ情報:")
-    st.sidebar.write(f"セッション初期化状態: {st.session_state.get('initialized', False)}")
-    st.sidebar.write(f"現在のメッセージ数: {len(st.session_state.messages)}")
-    st.sidebar.write(f"メッセージの内容: {st.session_state.messages}")
 
     # LangChainサービスの初期化
     if "langchain_service" not in st.session_state:
@@ -175,9 +167,7 @@ def render_chat(pinecone_service: PineconeService):
             st.session_state.property_info = "物件情報が登録されていません。"
         
         # 履歴の保存 (ローカルダウンロード)
-        st.write("デバッグ情報:")
         st.write(f"現在のメッセージ数: {len(st.session_state.messages)}")
-        st.write(f"メッセージの内容: {st.session_state.messages}")
         if len(st.session_state.messages) > 0:
             csv_data, filename = save_chat_history(st.session_state.messages)
             st.download_button(
@@ -235,14 +225,11 @@ def render_chat(pinecone_service: PineconeService):
     # ユーザー入力
     if prompt := st.chat_input("メッセージを入力してください"):
         # ユーザーメッセージを表示
-        user_message = {
+        st.session_state.messages.append({
             "role": "user",
             "content": prompt,
             "timestamp": datetime.now().isoformat()
-        }
-        st.session_state.messages = st.session_state.messages + [user_message]
-        st.experimental_rerun()
-        
+        })
         with st.chat_message("user"):
             st.markdown(prompt)
 
@@ -262,15 +249,12 @@ def render_chat(pinecone_service: PineconeService):
             )
             
             # アシスタントの応答を表示
-            assistant_message = {
+            st.session_state.messages.append({
                 "role": "assistant",
                 "content": response,
                 "details": details,
                 "timestamp": datetime.now().isoformat()
-            }
-            st.session_state.messages = st.session_state.messages + [assistant_message]
-            st.experimental_rerun()
-            
+            })
             with st.chat_message("assistant"):
                 st.markdown(response)
                 with st.expander("詳細情報"):
