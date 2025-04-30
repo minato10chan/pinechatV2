@@ -239,18 +239,27 @@ def render_chat(pinecone_service: PineconeService):
         
         # LangChainを使用して応答を生成
         with st.spinner("応答を生成中..."):
+            # 会話履歴をLangChainのメッセージ形式に変換
+            chat_history = []
+            for msg in st.session_state.messages[:-1]:  # 最後のメッセージ（現在の入力）を除く
+                if msg["role"] == "user":
+                    chat_history.append(("human", msg["content"]))
+                elif msg["role"] == "assistant":
+                    chat_history.append(("ai", msg["content"]))
+            
             response, details = st.session_state.langchain_service.get_response(
                 prompt,
                 system_prompt=selected_template_data["system_prompt"],
                 response_template=selected_template_data["response_template"],
-                property_info=st.session_state.get("property_info", "物件情報はありません。")
+                property_info=st.session_state.get("property_info", "物件情報はありません。"),
+                chat_history=chat_history  # 会話履歴を渡す
             )
             
             # アシスタントの応答を追加
             st.session_state.messages.append({
                 "role": "assistant",
                 "content": response,
-                "details": details,
+                "details": details,  # 詳細情報を保存
                 "timestamp": datetime.now().isoformat()
             })
     
@@ -258,6 +267,7 @@ def render_chat(pinecone_service: PineconeService):
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
+            # 詳細情報が含まれている場合は表示
             if "details" in message and message["details"]:
                 with st.expander("詳細情報"):
                     st.json(message["details"]) 

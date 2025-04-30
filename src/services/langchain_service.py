@@ -115,7 +115,7 @@ class LangChainService:
         
         return context_text, search_details
 
-    def get_response(self, query: str, system_prompt: str = None, response_template: str = None, property_info: str = None) -> Tuple[str, Dict[str, Any]]:
+    def get_response(self, query: str, system_prompt: str = None, response_template: str = None, property_info: str = None, chat_history: list = None) -> Tuple[str, Dict[str, Any]]:
         """クエリに対する応答を生成"""
         # プロンプトの設定
         system_prompt = system_prompt or self.system_prompt
@@ -144,12 +144,18 @@ class LangChainService:
         # 関連する文脈を取得
         context, search_details = self.get_relevant_context(query)
         
-        # チャット履歴を取得
-        chat_history = self.message_history.messages
+        # チャット履歴を設定
+        if chat_history:
+            self.message_history.messages = []
+            for role, content in chat_history:
+                if role == "human":
+                    self.message_history.add_user_message(content)
+                elif role == "ai":
+                    self.message_history.add_ai_message(content)
         
         # 応答を生成
         response = chain.invoke({
-            "chat_history": chat_history,
+            "chat_history": self.message_history.messages,
             "context": context,
             "property_info": property_info or "物件情報はありません。",
             "input": query
