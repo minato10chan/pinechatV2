@@ -109,6 +109,7 @@ def render_chat(pinecone_service: PineconeService):
     # セッション状態の初期化
     if "messages" not in st.session_state:
         st.session_state.messages = []
+        st.write("セッション状態を初期化しました")
 
     # LangChainサービスの初期化
     if "langchain_service" not in st.session_state:
@@ -227,11 +228,14 @@ def render_chat(pinecone_service: PineconeService):
     # ユーザー入力
     if prompt := st.chat_input("メッセージを入力してください"):
         # ユーザーメッセージを表示
-        st.session_state.messages.append({
+        user_message = {
             "role": "user",
             "content": prompt,
             "timestamp": datetime.now().isoformat()
-        })
+        }
+        st.session_state.messages.append(user_message)
+        st.write(f"ユーザーメッセージを追加: {user_message}")
+        
         with st.chat_message("user"):
             st.markdown(prompt)
 
@@ -251,12 +255,15 @@ def render_chat(pinecone_service: PineconeService):
             )
             
             # アシスタントの応答を表示
-            st.session_state.messages.append({
+            assistant_message = {
                 "role": "assistant",
                 "content": response,
                 "details": details,
                 "timestamp": datetime.now().isoformat()
-            })
+            }
+            st.session_state.messages.append(assistant_message)
+            st.write(f"アシスタントメッセージを追加: {assistant_message}")
+            
             with st.chat_message("assistant"):
                 st.markdown(response)
                 with st.expander("詳細情報"):
