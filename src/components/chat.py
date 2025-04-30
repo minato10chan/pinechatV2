@@ -261,4 +261,6 @@ def render_chat(pinecone_service: PineconeService):
             with st.chat_message("assistant"):
                 st.markdown(response)
                 with st.expander("詳細情報"):
-                    st.json(details) 
+                    st.json(details)
+            # 画面を更新
+            st.rerun() 
