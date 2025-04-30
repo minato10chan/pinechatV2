@@ -235,7 +235,12 @@ def render_chat(pinecone_service: PineconeService):
             "content": prompt,
             "timestamp": datetime.now().isoformat()
         })
+        
+        # 画面を更新してユーザーメッセージを表示
+        st.rerun()
 
+    # アシスタントの応答を生成（ユーザーメッセージが追加された後のみ）
+    if st.session_state.messages and st.session_state.messages[-1]["role"] == "user":
         # 選択されたテンプレートを取得
         selected_template_data = next(
             template for template in st.session_state.prompt_templates 
@@ -271,5 +276,5 @@ def render_chat(pinecone_service: PineconeService):
                 "timestamp": datetime.now().isoformat()
             })
             
-            # メッセージの追加が完了したら画面を更新
+            # アシスタントの応答を表示するために画面を更新
             st.rerun() 
