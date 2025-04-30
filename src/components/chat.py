@@ -224,14 +224,12 @@ def render_chat(pinecone_service: PineconeService):
 
     # ユーザー入力
     if prompt := st.chat_input("メッセージを入力してください"):
-        # ユーザーメッセージを表示
+        # ユーザーメッセージを追加
         st.session_state.messages.append({
             "role": "user",
             "content": prompt,
             "timestamp": datetime.now().isoformat()
         })
-        with st.chat_message("user"):
-            st.markdown(prompt)
 
         # 選択されたテンプレートを取得
         selected_template_data = next(
@@ -248,16 +246,18 @@ def render_chat(pinecone_service: PineconeService):
                 property_info=st.session_state.get("property_info", "物件情報はありません。")
             )
             
-            # アシスタントの応答を表示
+            # アシスタントの応答を追加
             st.session_state.messages.append({
                 "role": "assistant",
                 "content": response,
                 "details": details,
                 "timestamp": datetime.now().isoformat()
             })
-            with st.chat_message("assistant"):
-                st.markdown(response)
+    
+    # メッセージの表示
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+            if "details" in message and message["details"]:
                 with st.expander("詳細情報"):
-                    st.json(details)
-            # 画面を更新
-            st.rerun() 
+                    st.json(message["details"]) 
