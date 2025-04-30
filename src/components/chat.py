@@ -184,25 +184,21 @@ def render_chat(pinecone_service: PineconeService):
         uploaded_file = st.file_uploader("保存した履歴を読み込む", type=['csv'])
         if uploaded_file is not None:
             try:
-                # 履歴を読み込む前に既存の履歴をクリア
-                st.session_state.messages = []
-                st.session_state.langchain_service.clear_memory()
-                
                 # 新しい履歴を読み込む
                 loaded_messages = load_chat_history(uploaded_file)
                 
-                # メッセージを追加
+                # セッション状態を更新
+                st.session_state.messages = loaded_messages
+                
+                # LangChainの会話履歴を更新
+                st.session_state.langchain_service.clear_memory()
                 for message in loaded_messages:
-                    st.session_state.messages.append(message)
-                    # LangChainの会話履歴も更新
                     if message["role"] == "user":
                         st.session_state.langchain_service.message_history.add_user_message(message["content"])
                     elif message["role"] == "assistant":
                         st.session_state.langchain_service.message_history.add_ai_message(message["content"])
                 
                 st.success("履歴を読み込みました")
-                # 画面を更新して履歴を表示
-                st.rerun()
             except Exception as e:
                 st.error(f"履歴の読み込みに失敗しました: {str(e)}")
         
@@ -211,7 +207,6 @@ def render_chat(pinecone_service: PineconeService):
             st.session_state.messages = []
             st.session_state.langchain_service.clear_memory()
             st.success("履歴をクリアしました")
-            st.rerun()
         
         # 履歴の表示
         st.header("会話履歴")
@@ -227,7 +222,6 @@ def render_chat(pinecone_service: PineconeService):
                 with col2:
                     if st.button("削除", key=f"delete_{i}"):
                         st.session_state.messages.pop(i)
-                        st.rerun()
     
     # メインのチャット表示
     for message in st.session_state.messages:
