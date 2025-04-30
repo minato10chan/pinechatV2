@@ -177,7 +177,8 @@ class LangChainService:
                 "システムプロンプト": system_prompt,
                 "応答テンプレート": response_template
             },
-            "物件情報": property_info or "物件情報はありません。"
+            "物件情報": property_info or "物件情報はありません。",
+            "会話履歴数": len(chat_history) if chat_history else 0
         }
         
         return response.content, details

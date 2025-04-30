@@ -240,11 +240,14 @@ def render_chat(pinecone_service: PineconeService):
         with st.spinner("応答を生成中..."):
             # 会話履歴をLangChainのメッセージ形式に変換
             chat_history = []
-            for msg in st.session_state.messages[:-1]:  # 最後のメッセージ（現在の入力）を除く
+            for msg in st.session_state.messages:  # すべてのメッセージを含める
                 if msg["role"] == "user":
                     chat_history.append(("human", msg["content"]))
                 elif msg["role"] == "assistant":
                     chat_history.append(("ai", msg["content"]))
+            
+            # 会話履歴を逆順にして、最新の会話から処理
+            chat_history.reverse()
             
             response, details = st.session_state.langchain_service.get_response(
                 prompt,
