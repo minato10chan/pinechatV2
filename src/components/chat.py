@@ -211,6 +211,7 @@ def render_chat(pinecone_service: PineconeService):
             st.session_state.messages = []
             st.session_state.langchain_service.clear_memory()
             st.success("履歴をクリアしました")
+            st.experimental_rerun()
         
         # 履歴の表示
         st.header("会話履歴")
@@ -226,7 +227,7 @@ def render_chat(pinecone_service: PineconeService):
                 with col2:
                     if st.button("削除", key=f"delete_{i}"):
                         st.session_state.messages.pop(i)
-                        st.rerun()
+                        st.experimental_rerun()
     
     # メインのチャット表示
     for message in st.session_state.messages:
