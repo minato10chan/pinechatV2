@@ -182,13 +182,13 @@ def render_chat(pinecone_service: PineconeService):
         
         # 履歴の読み込み
         uploaded_file = st.file_uploader("保存した履歴を読み込む", type=['csv'])
-        if uploaded_file is not None:
+        if uploaded_file is not None and "load_history" not in st.session_state:
             try:
                 # 新しい履歴を読み込む
                 loaded_messages = load_chat_history(uploaded_file)
                 
                 # セッション状態を更新
-                st.session_state.messages = loaded_messages
+                st.session_state.messages = loaded_messages.copy()
                 
                 # LangChainの会話履歴を更新
                 st.session_state.langchain_service.clear_memory()
@@ -198,7 +198,9 @@ def render_chat(pinecone_service: PineconeService):
                     elif message["role"] == "assistant":
                         st.session_state.langchain_service.message_history.add_ai_message(message["content"])
                 
+                st.session_state.load_history = True
                 st.success("履歴を読み込みました")
+                st.rerun()
             except Exception as e:
                 st.error(f"履歴の読み込みに失敗しました: {str(e)}")
         
@@ -206,23 +208,12 @@ def render_chat(pinecone_service: PineconeService):
         if st.button("履歴をクリア"):
             st.session_state.messages = []
             st.session_state.langchain_service.clear_memory()
+            if "load_history" in st.session_state:
+                del st.session_state.load_history
             st.success("履歴をクリアしました")
-        
-        # 履歴の表示
-        st.header("会話履歴")
-        for i, message in enumerate(st.session_state.messages):
-            with st.container():
-                col1, col2 = st.columns([3, 1])
-                with col1:
-                    # メッセージの内容を表示（長い場合は省略）
-                    content = message['content']
-                    if len(content) > 50:
-                        content = content[:50] + "..."
-                    st.text(f"{message['role']}: {content}")
-                with col2:
-                    if st.button("削除", key=f"delete_{i}"):
-                        st.session_state.messages.pop(i)
+            st.rerun()
     
+    # メインコンテンツ
     # メインのチャット表示
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
@@ -240,11 +231,6 @@ def render_chat(pinecone_service: PineconeService):
             "timestamp": datetime.now().isoformat()
         })
         
-        # 画面を更新してユーザーメッセージを表示
-        st.rerun()
-
-    # アシスタントの応答を生成（ユーザーメッセージが追加された後のみ）
-    if st.session_state.messages and st.session_state.messages[-1]["role"] == "user":
         # 選択されたテンプレートを取得
         selected_template_data = next(
             template for template in st.session_state.prompt_templates 
@@ -279,6 +265,5 @@ def render_chat(pinecone_service: PineconeService):
                 "details": details,
                 "timestamp": datetime.now().isoformat()
             })
-            
-            # アシスタントの応答を表示するために画面を更新
-            st.rerun() 
+        
+        st.rerun() 
